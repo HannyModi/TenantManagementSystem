@@ -33,8 +33,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,8 +43,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'TenantManagementApp',
-    'rest_framework',
+    'datetimewidget',
+    # 'rest_framework',
 ]
+
+AUTH_USER_MODEL = 'TenantManagementApp.TblAgent'
+
+USE_L10N = True
+USE_TZ = True
+USE_I18N = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -56,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'TenantManagementProject.urls'
@@ -88,7 +94,7 @@ WSGI_APPLICATION = 'TenantManagementProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME' : 'ManageTenantDB',
+        'NAME' : 'TenantManagementDB',
         'USER' : 'postgres',
         'PASSWORD' : 'password',
         'HOST' : '',
@@ -124,6 +130,10 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
 ]
 
+AUTHENTICATION_BACKENDS = (
+        'django.contrib.auth.backends.RemoteUserBackend',
+        'django.contrib.auth.backends.ModelBackend',
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

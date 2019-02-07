@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.utils.deconstruct import deconstructible
 # from phonenumber_field.modelfields import PhoneNumberField
@@ -16,10 +16,8 @@ phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
 # Agent Table
 
 
-class TblAgent(models.Model):
-    # Reference from user table
-    ag_user = models.OneToOneField(User,
-                                   on_delete=models.CASCADE)
+class TblAgent(AbstractUser):
+
     # Validating contact using phone_regex RegexValidator.
     ag_contact = models.CharField(validators=[phone_regex],
                                   null=False, blank=False,
@@ -31,14 +29,26 @@ class TblAgent(models.Model):
     # image of Agent
     ag_profile_image = models.ImageField(upload_to='agents/profiles',
                                          blank=True)
-    # Email of Agent.
-    ag_email = models.EmailField(blank=True)
+
+    def normal_save(self, *args, **kwargs):
+        self.is_active = False
+        self.is_staff = False
+        self.is_superuser = False
+        super(TblAgent, self).save(*args, **kwargs)
+
+    def verified_save(self, *args, **kwargs):
+        self.is_active = True
+        self.is_staff = True
+        self.is_superuser = False
+        super(TblAgent, self).save(*args, **kwargs)
+
+    
 
     class Meta:
         verbose_name_plural = 'Agent Details'
 
     def __str__(self):
-        return self.ag_user.username
+        return self.username
 
 
 # Tenant Table
