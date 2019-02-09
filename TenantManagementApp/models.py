@@ -42,7 +42,11 @@ class TblAgent(AbstractUser):
         self.is_superuser = False
         super(TblAgent, self).save(*args, **kwargs)
 
-    
+    def retire_agent(self, *args, **kwargs):
+        self.is_active=False
+        self.is_staff = True
+        self.is_superuser = False
+        super(TblAgent, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = 'Agent Details'
@@ -108,7 +112,7 @@ class TblMasterProperty(models.Model):
         verbose_name_plural = 'Master Properties'
 
     def __str__(self):
-        return self.msp_address
+        return self.msp_name 
 
 
 # Property Table

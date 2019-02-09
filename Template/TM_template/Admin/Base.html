@@ -21,8 +21,7 @@
     <link href="{% static "css/prettyPhoto.css" %}" rel="stylesheet" />
     <link href="{% static "css/camera.css" %}" rel="stylesheet" />
     <link href="{% static "css/jquery.bxslider.css" %}" rel="stylesheet" />
-    <link href="{% static "css/style.css" %}" rel="stylesheet" />
-   
+    <link href="{% static 'css/style.css' %}" rel="stylesheet" />
     <!-- <link href="../../static/css/style.css" rel="stylesheet" /> -->
     <!-- Theme skin -->
     <link href="{% static 'color/default.css' %}" rel="stylesheet" />
@@ -34,16 +33,12 @@
     <link rel="apple-touch-icon-precomposed" href="ico/apple-touch-icon-57-precomposed.png" />
     <link rel="shortcut icon" href="ico/favicon.png" />
 
-    
-    
-
+   
 </head>
 <body>
 
 
     <div id="wrapper">
-
-
         <!-- start header -->
         <header>
             <div class="top">
@@ -71,7 +66,7 @@
                 <div class="row nomargin">
                     <div class="span4">
                         <div class="logo">
-                           <h1> <a href="{% url 'index' %}">Home Renting<img src="{% static 'image/surfer.jpg' %}" height="70" width="100" /></a></h1>
+                           <h1> <a href="{% url 'adminhome' %}">Home Renting<img src="{% static 'image/surfer.jpg' %}" height="70" width="100" /></a></h1>
                         </div>
                     </div>
                     <div class="span8">
@@ -79,23 +74,30 @@
                             <div class="navigation">
                                 <nav>
                                     <ul class="nav topnav">
-                                        <li class="dropdown active">
-                                            <a href="{% url 'index' %}"><i class="icon-home"></i> Home <i class="icon-angle-down"></i></a>
-                                            
+                                        <!-- <li class="dropdown active"> -->
+                                            <li class="dropdown">
+                                            <a>Agent <i class="icon-angle-down"></i></a>
+                                            <ul class="dropdown-menu">
+                                                    <li><a href="{% url 'agent_requests' %}">Agent Request</a></li>
+                                                    <li><a href="{% url 'view_approved_agent' %}">View Approved Agents</a></li>
+                                            </ul>
                                         </li>
                                         <li class="dropdown">
-                                            <a href="#">Features <i class="icon-angle-down"></i></a>
+                                            <a href="#">Property <i class="icon-angle-down"></i></a>
                                             <ul class="dropdown-menu">
-                                                <li><a href="#">Typography</a></li>
-                                                <li><a href="#">Components</a></li>
-                                                <li><a href="#">Icons</a></li>
-                                                <li><a href="#">Icon variations</a></li>
-                                                <li class="dropdown"><a href="#">3rd menus<i class="icon-angle-right"></i></a>
+                                                <li class="dropdown"><a >Master Property<i class="icon-angle-right"> </i></a>
                                                     <ul class="dropdown-menu sub-menu-level1">
-                                                        <li><a href="#">Sub menu</a></li>
-                                                        <li><a href="#">Sub menu</a></li>
-                                                    </ul>
+                                                            <li><a href="{% url 'add_master_property' %}">Add Master Property</a></li>
+                                                            <li><a href="{% url 'master_property_view' %}">View Master Properties</a></li>
+                                                        </ul>
                                                 </li>
+                                                <li class="dropdown"><a href="{% url 'agent_requests' %}">Property<i class="icon-angle-right"></i></a>
+                                                    <ul class="dropdown-menu sub-menu-level1">
+                                                            <li><a href="{% url 'add_property' %}">Add Property</a></li>
+                                                            <li><a href="{% url 'agent_requests' %}">View Properties</a></li>
+                                                        </ul>
+                                                    </li>
+                                                
                                             </ul>
                                         </li>
                                         <li class="dropdown">
@@ -131,6 +133,20 @@
                                         <li>
                                             <a href="contact.html">Contact </a>
                                         </li>
+                                        <li>
+                                            <a href="{% url 'index' %}" style="background-color: #e96b56;
+                                                                                border: none;
+                                                                                color: white;
+                                                                                
+                                                                                text-align: center;
+                                                                                text-decoration: none;
+                                                                                display: inline-block;
+                                                                                font-size: 20px;
+                                                                                margin: 4px 2px;
+                                                                                cursor: pointer;"
+                                                                                 class="btn-mini btn-rounded animated fadeInUp"
+                                                                                 onclick="alert('You are logged out.')">Log Out</a>
+                                        </li>
                                     </ul>
                                 </nav>
                             </div>
@@ -142,7 +158,7 @@
         </header>
         <!-- end header -->
 {% block bodyblock %}
-      
+      admin hu
 {% endblock %}
         <footer>
             <div class="container">
@@ -186,7 +202,7 @@
     <!-- javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="{% static 'js/jquery.js' %}"></script>
+    <script src="{% static "js/jquery.js" %}"></script>
     <script src="{% static 'js/jquery.easing.1.3.js' %}"></script>
     <script src="{% static 'js/bootstrap.js' %}"></script>
 
@@ -207,12 +223,6 @@
 
     <!-- Template Custom JavaScript File -->
     <script src="{% static 'js/custom.js' %}"></script>
-   
-
-   
-    {% block js%}
-
-    {% endblock %}
 
     </body>
 

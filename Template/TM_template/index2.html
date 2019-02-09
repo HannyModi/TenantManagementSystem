@@ -1,0 +1,13 @@
+{% extends 'TM_template/Base.html' %}
+{% load staticfiles %}
+{% block titleblock %}
+Index
+{% endblock %}
+{% block bodyblock %}
+
+<div id="content">
+    Hello
+</div>
+<a href="{% url 'addTenant' %}">Add Tenant</a>
+
+{% endblock %}

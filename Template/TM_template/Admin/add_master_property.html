@@ -1,0 +1,42 @@
+{% extends 'TM_template/Admin/Base.html' %}
+{% load staticfiles %}
+{% block titleblock %}
+Add Master Property
+{% endblock %}
+{% block bodyblock %}
+<section id="inner-headline">
+    <div class="container">
+        <div class="row">
+            <div class="span12">
+                <div class="inner-heading">
+                    <ul class="breadcrumb">
+                        <li><a href="{% url 'index' %}"><i class="icon-home"></i> Home</a> <i class="icon-angle-right"></i></li>
+                        <li class="active">Add Master Property</li>
+                    </ul>
+                    <h2>Add Master Property</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="container">
+    <div class="container">
+        <div class="row">
+            <div class="span8">
+
+<form enctype="multipart/form-data" role="form" class="contactForm" action="" method="POST" id="AddMPForm">
+    {% csrf_token %}
+Name:<input type="text" name="mname" required="True"/> <br/>
+Address: <textarea name="maddress" required="True"></textarea><br/>
+Description:<textarea name="mdescription" required="True"></textarea><br/>
+
+
+<button type="submit" value="Submit" class="btn btn-success btn-medium" >Add Property</button>
+
+</form>
+
+                </div>
+                </div>
+                </div>
+                </section>
+{% endblock %}
