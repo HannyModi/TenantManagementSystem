@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'TenantManagementApp',
     'datetimewidget',
-    # 'rest_framework',
+    'password_reset',
 ]
 
 AUTH_USER_MODEL = 'TenantManagementApp.TblAgent'
@@ -80,6 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.media',
 
             ],
+        
         },
     },
 ]
@@ -149,7 +150,16 @@ USE_L10N = True
 
 USE_TZ = True
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+DEFAULT_FROM_EMAIL='system.tenant.management@gmail.com'
 
+EMAIL_HOST_USER = 'system.tenant.management@gmail.com'
+EMAIL_HOST_PASSWORD = '123.Admin'
+EMAIL_PORT = 587
+RECOVER_ONLY_ACTIVE_USERS=True
+PASSWORD_RESET_TOKEN_EXPIRES=1
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 

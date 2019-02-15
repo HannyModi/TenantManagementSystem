@@ -1,0 +1,83 @@
+{% extends 'TM_template/Agent/Base.html'%}
+{% load staticfiles%}
+{% block titleblock %}Admin Home{% endblock %}
+{% block bodyblock %}
+<section id="inner-headline">
+    <div class="container">
+        <div class="row">
+            <div class="span12">
+                <div class="inner-heading">
+                    <ul class="breadcrumb">
+                        <li><a href="{% url 'agenthome' %}"><i class="icon-home"></i> Home</a> <i class="icon-angle-right"></i></li>
+                        <li class="active">View Tenants</li>
+                    </ul>
+                    <h2>View Tenants</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="container">
+    <div class="container">
+        <div class="row">
+            <div class="span8">
+                <div style="background-image: url('images/bg-01.jpg');">
+                    <div>
+
+                        {% if tenantlist %}
+                        <table class="table fixed_header">
+                            <tr class="success">
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th colspan="2">Email</th>
+                                <th colspan="2">Address</th>
+                                <th>Date of Request</th>
+                                <th>Profile</th>
+
+                                <th>Retire</th>
+                                <th>View</th>
+                            </tr>
+
+                            {% for agent in agents %}
+                            <tr class="info">
+                                <td>{{ tenantlist.tn_name }}</td>
+                                <td>{{ tenantlist.tn_contact }}</td>
+                                <td colspan="2">{{ tenantlist.email }}</td>
+                                <td colspan="2">{{ tenantlist.ag_local_address }}</td>
+                                <td>{{ tenantlist.date_joined }}</td>
+                                <td> <img src="{{ MEDIA_URL }}{{ tenantlist.ag_profile_image }}" style="height:50px; width:100px;"
+                                        alt="{{ agent.username }}">
+                                </td>
+
+                                <td>
+                                    <form method="POST" action="{% url 'agent_request_retire' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="aid" value="{{ agent.id }}">
+                                        <input type="submit" name="submit" class="btn btn-theme" value="Retire">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{% url 'agent_profile' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="aid" value="{{ agent.id }}">
+                                        <input type="submit" class="btn btn-info" name="submit" value="View">
+                                    </form>
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+                                             
+                    </table>
+                    {% else %}
+
+                    There are No Tenants
+                   
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

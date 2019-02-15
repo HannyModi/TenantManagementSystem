@@ -30,6 +30,10 @@ Register
       <div class="span8">
         <form action="" method="post" enctype="multipart/form-data" role="form" class="contactForm">
           {% csrf_token %}
+          {% for field in ag_form.visible_fields %}
+                    {{ field.errors }}
+          {% endfor %}
+          
           {{ag_form.first_name.help_text}}
           {{ag_form.first_name}}
           <br />

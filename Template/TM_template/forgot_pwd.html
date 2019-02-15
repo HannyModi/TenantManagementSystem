@@ -1,0 +1,66 @@
+{% extends 'TM_template/Base.html' %}
+{% load staticfiles %}
+{% block titleblock %}
+Contact Us
+{% endblock %}
+{% block bodyblock %}
+<section id="inner-headline">
+        <div class="container">
+          <div class="row">
+            <div class="span12">
+              <div class="inner-heading">
+                <ul class="breadcrumb">
+                  <li><a href="{% url 'index' %}">Home</a> <i class="icon-angle-right"></i></li>
+                  <li class="active">Forgot Password</li>
+                </ul>
+                <h2>Recover Your Account</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="container">
+<div class="container">
+        <div class="row">
+          <div class="span8">
+            <h4>Reset Account</h4>
+
+            <div id="sendmessage">Your OTP has been sent on your email. Thank you!</div>
+            <div id="errormessage">Your username/email is not registered.</div>
+            <form action="" method="post" role="form" class="contactForm">
+                {% csrf_token %}
+              <div class="row">
+                <div class="span4 form-group field">
+                  <input type="text" name="username" id="username" placeholder="Your User Name" data-rule="minlen:4" />
+                  <div class="validation"></div>
+                </div>
+
+                <div class="span4 form-group">
+                  <input type="email" name="email" id="email" placeholder="Your Email" data-rule="email" data-msg="Please enter a valid email" />
+                  <div class="validation"></div>
+                </div>
+                
+                  <div class="text-center">
+                    <button class="btn btn-theme btn-medium margintop10" id="send" type="submit">Send OTP</button>
+                  </div>
+<br/>
+                  <div id="hiddencontent" class="hidden">
+                        <div class="span4 form-group field">
+                                <input type="text" name="otp" id="username" placeholder="Enter Otp" data-rule="minlen:4" />
+                                           
+                                    <button class="btn btn-theme btn-medium margintop10" id="confirm" type="submit">Confirm OTP</button>
+                                  </div>
+                  </div>
+
+                </div>
+              </div>
+            </form>
+          </div>
+         
+        </div>
+      </div>
+      </section>
+     
+{% endblock %}
+{% block js %}
+{% endblock %}

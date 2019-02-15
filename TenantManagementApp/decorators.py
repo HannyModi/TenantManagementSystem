@@ -10,7 +10,7 @@ def for_admin(function):
            return function(request, *args, **kwargs)
         else:
             print("\n\n\n\nInavlid user\n\n\n\n")
-            return render(request,'TM_template/Index.html') 
+            return render(request,'TM_template/index.html') 
     return wrap
 
 def for_staff(function):
@@ -20,5 +20,5 @@ def for_staff(function):
            return function(request, *args, **kwargs)
         else:
             print("\n\n\n\nInavlid user\n\n\n\n")
-            return render(request,'TM_template/Base.html') 
+            return render(request,'TM_template/index.html') 
     return wrap

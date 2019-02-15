@@ -6,6 +6,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 
 
+
 Doc_Choice = [(0, "Select"), (1, "Adhar Card"), (2, "Driving Licence"),
               (3, "Passport"), (4, "Election Card"), (5, "Pan Card"), ]
 Status = [(-1, "Select Status"), (1, "Visit"), (2, "Deal Accepted aggrement under process"),
@@ -80,3 +81,5 @@ class AgentChangeForm(UserChangeForm):
     class Meta:
         model = TblAgent
         fields = ('username', 'email')
+
+

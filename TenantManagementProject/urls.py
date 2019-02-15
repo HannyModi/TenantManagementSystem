@@ -20,12 +20,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 
+
 urlpatterns = [
     re_path('^$',views.index, name='index'),
     path('login/',views.do_login, name= 'login'),
-    re_path('^AgentRegistration/$',views.addAgent, name='addAgent'),
-    
+    path('contact us/',views.contactus,name='contactus'),
+    # path('forgot_password/',views.forgotpwd,name='forgotpwd'),
+    re_path('^AgentRegistration/$',views.addAgent, name='addAgent'), 
+    path('pwd_reset/',include('password_reset.urls')),  
+    # path('pwd_reset/',include(('password_reset.urls', 'pwd_reset'), namespace='pwd_reset')),
     path('Agent/',include(agenturls)),
     path('Admin/',include(adminurl)),
     path('admin/', admin.site.urls),
+    
+   
+    
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

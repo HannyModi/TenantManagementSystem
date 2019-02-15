@@ -1,10 +1,13 @@
-from django.shortcuts import render,reverse
+import datetime
+from django.conf import settings
+from django.shortcuts import render
+from django.urls import reverse
 from TenantManagementApp.models import *
-from TenantManagementApp.forms import TenantRegistratonForm, AgentForm
+from TenantManagementApp.forms import *
 from django.contrib.auth import authenticate, login, logout
 from TenantManagementApp.decorators import *
 from django.http import HttpResponseRedirect, HttpResponse
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 # Create your views here.
 def index(request):
     if request.method=='GET':
@@ -42,7 +45,7 @@ def addAgent(request):
                 agent = ag_form.save(commit=False)
                 agent.date_joined = request.POST.get('date_joined')
                 agent.set_password(agent.password)
-                agent.normal_save()
+                agent.agent_save()
                 return index(request)
             except Exception as e:
                 print("Error:", e)
@@ -65,7 +68,7 @@ def do_login(request):
         elif user.is_staff:
             print("\n\n\n\n Agent \n", user, "\n\n\n")
             login(request, user)
-            return render(request, 'TM_template/Agent/Base.html')
+            return render(request, 'TM_template/Agent/Ag_home.html')
         else:
             print("\n\n\n\nInavlid user\n\n\n\n")
             return render(request, 'TM_template/Index.html')
@@ -75,14 +78,10 @@ def do_login(request):
 
 
 # view all agent requests on admin site
-# @login_required
 @for_admin
 def view_agent_request(request):
     try:
         agents = TblAgent.objects.filter(is_active=False, is_staff=False)
-        page = request.GET.get('page', 1)
-        paginator = Paginator(agents, 2)
-        agents = paginator.page(page)
     except Exception as e:
         agents = None
         print('----> Error :', e)
@@ -91,9 +90,7 @@ def view_agent_request(request):
             print(agent)
     return render(request, 'TM_template/Admin/agent_requests.html', {'agents': agents})
 
-
 # accepting the agent request
-# @login_required
 @for_admin
 def agent_request_accept(request):
     id = request.POST['id']
@@ -104,7 +101,6 @@ def agent_request_accept(request):
 
 # deleting the agent request
 @for_admin
-# @login_required
 def agent_request_reject(request):
     id = request.POST['aid']
     agent = TblAgent.objects.filter(id=id).delete()
@@ -112,9 +108,7 @@ def agent_request_reject(request):
     print("\n\n\n\n\n", agent)
     return view_agent_request(request)
 
-
 # Viewing the agent request in more detailed View
-
 @for_admin
 def agent_profile(request):
     id = request.POST['aid']
@@ -123,24 +117,41 @@ def agent_profile(request):
     # print("\n\n\n\n\n", agent)
     return render(request, 'TM_template/Admin/agent_profile.html', {'agent': agent})
 
-
-def add_master_property(request):
-    
+@for_admin
+def add_master_property(request):   
     if request.method == "POST":
-        msp_name=request.POST['mname']
-        msp_address=request.POST['maddress']
-        msp_description=request.POST['mdescription']
-        msp_is_allocated = False
-        msp_is_active = True
+        lst = request.POST
+        for l in lst.keys():
+            print(l,"   ",lst[l])
+
+    if request.method == "POST":
+
         try:
-            mp= TblMasterProperty.objects.create(msp_name=msp_name,msp_address=msp_address,msp_description=msp_description,msp_is_allocated=msp_is_allocated,msp_is_active=msp_is_active)            
-            mp.save()
-            return adminhome(request)
+            # Creating new or taking Existing object for master property.
+            msp = TblMasterProperty.objects.get_or_create(msp_name=request.POST['msp_name'],
+                                                          msp_address=request.POST['msp_address'],
+                                                          msp_description=request.POST['msp_description'],
+                                                          msp_is_active=True)
+            # Condition to check if new row is created or not.
+            if msp[1]:
+                # Saving the object and creating master clone if new row created.
+                msp[0].new_save()
+                no = int(request.POST['msp_clone_no'])
+                if request.POST['msp_have_clones'] and no > 0 and no <= 5:
+                    for n in range(1, no+1):
+                        cln = TblMasterPropertyClone.objects.create(
+                            cln_alias=request.POST['msp_clone'+str(n)],
+                            cln_master=msp[0],cln_is_allocated=False,cln_is_active=True)
+                        cln.save()
+                return adminhome(request)
+            else:
+                return render(request, 'TM_template/Admin/add_master_property.html',
+                              {'context': 'Master Property already exists'})
+
         except Exception as e:
-            print("Error :",e)
+            print("Error :", e)
     else:
         return render(request,'TM_template/Admin/add_master_property.html')
-
 
 def adminhome(request):
     return render(request,'TM_template/Admin/home.html')
@@ -148,37 +159,66 @@ def adminhome(request):
 def agenthome(request):
     return render(request,'TM_template/Agent/ag_home.html')
 
-
 def add_property(request):
-    address_list=[]
+    address_list = TblMasterProperty.objects.all()
+    existing_addresses = []
+    addeed_addresses = []
     if request.method == "POST":
-        pr_master = TblMasterProperty.objects.get(id=request.POST['msp'])
-        pr_address = request.POST['paddress']
-        pr_rent = request.POST['prent']
-        pr_deposite = request.POST['pdeposite']
-        pr_is_allocated = False
-        pr_is_active = True
-        try:
-            obj = TblProperty.objects.create(pr_master=pr_master,pr_address=pr_address,pr_rent=pr_rent,pr_deposite=pr_deposite,pr_is_active=pr_is_active,pr_is_allocated=pr_is_allocated)
-            obj.save()
-            return adminhome(request)
-        except Exception as e:
-            print("Error:",e)
-    else:
-        address_list=TblMasterProperty.objects.all()
+        # A function to check if property alredy exists
+        def is_property_exists(msp=None, add=None):
+            is_exists = False
+            clones = TblMasterPropertyClone.objects.filter(cln_master=msp)
+            for clone in clones:
+                if TblProperty.objects.filter(pr_master=clone, pr_address=add).exists():
+                    is_exists = True
+                    break
+            return is_exists
+
+        msp_id = request.POST['pr_msp']
+        msp_clone_id = request.POST['pr_msp_clone']
+        num = request.POST['pr_num']
+        pr_rent = request.POST['pr_rent']
+        pr_deposite = request.POST['pr_deposite']
+        pr_description = request.POST['pr_description']
+        msp = TblMasterProperty.objects.get(id=msp_id)
+        msp_clone = TblMasterPropertyClone.objects.get(id=msp_clone_id)
+        for n in range(int(num)):
+            if 'pr_address'+str(n) in request.POST.keys():
+                pr_address = request.POST['pr_address'+str(n)]
+                if not is_property_exists(msp=msp, add=pr_address):
+                    try:
+                        obj = TblProperty.objects.create(pr_master=msp_clone,
+                                                         pr_address=pr_address,
+                                                         pr_rent=pr_rent,
+                                                         pr_deposite=pr_deposite,
+                                                         pr_description=pr_description,
+                                                         pr_is_active=True,
+                                                         pr_is_allocated=False)
+                        obj.save()
+                        addeed_addresses.append(pr_address)
+                    except Exception as e:
+                        print("\n\n\n\nError:", e)
+                else:
+                    existing_addresses.append(pr_address)
+        if existing_addresses:
+            context = ",".join(existing_addresses)+" are alredy existing in <b><u>" + \
+                msp.msp_name+"</u></b> Master Property.."
+        else:
+            context = None
+        if addeed_addresses:
+            success = ",".join(addeed_addresses)+" are added in <b><u>"+msp_clone.cln_alias + \
+                "</b></u> clone of <b><u>"+msp.msp_name+"<b></u> Master Property."
+        else:
+            success = "No Property added to <b><u>"+msp_clone.cln_alias + \
+                "</u></b> clone of <b><u>"+msp.msp_name+"</u></b> Master Property."
+        return render(request, 'TM_template/Admin/add_property.html', {'address_list': address_list, 'context': context, 'success': success})
+
     return render(request,'TM_template/Admin/add_property.html',{'address_list':address_list})
 
 @for_admin
 def view_approved_agent(request):
     try:
-        agents = TblAgent.objects.filter(is_active=True, is_staff=True, is_superuser=False)
-        page = request.GET.get('page', 1)
-        paginator = Paginator(agents, 2)
-        agents = paginator.page(page)
-    except PageNotAnInteger:
-        agents = paginator.page(1)
-    except EmptyPage:
-        agents = paginator.page(paginator.num_pages)
+        agents = TblAgent.objects.filter(is_active=True, is_staff=True, is_superuser=False).order_by('first_name', 'last_name')
     except Exception as e:
         agents = None
         print('----> Error :', e)
@@ -186,7 +226,6 @@ def view_approved_agent(request):
     #     for agent in agents:
     #         print(agent)
     return render(request, 'TM_template/Admin/all_approved_agents.html', {'agents': agents})
-
 
 def agent_request_retire(request):
     id = request.POST['aid']
@@ -198,24 +237,16 @@ def agent_request_retire(request):
 def master_property_view(request):
     try:
         master_property_list=TblMasterProperty.objects.all()
-        page = request.GET.get('page', 1)
-        paginator = Paginator(master_property_list, 2)
-        master_property_list = paginator.page(page)
-    except PageNotAnInteger:
-        master_property_list = paginator.page(1)
-    except EmptyPage:
-        master_property_list = paginator.page(paginator.num_pages)
     except Exception as e:
         master_property_list = None
         print('----> Error :', e)
     master_property_list=TblMasterProperty.objects.all()
-    return render(request,'TM_template/Admin/master_property_view.html',{'master_property_list':master_property_list})
+    allocated_mp=TblAgentAllocation.objects.all()
+    return render(request,'TM_template/Admin/master_property_view.html',{'master_property_list':master_property_list,'allocated_mp':allocated_mp})
 
 def allocate_msp(request,msp_id=None):
     obj_msp=TblMasterProperty.objects.get(id=msp_id)
     obj_agent=[]
-    agent=""
-    mp=""
     if request.method=='POST':
         al_master=TblMasterProperty.objects.get(id=request.POST['msp'])
         al_agent=TblAgent.objects.get(id=request.POST['agentx'])        
@@ -226,3 +257,81 @@ def allocate_msp(request,msp_id=None):
 
     obj_agent=TblAgent.objects.filter(is_active=True, is_staff=True,is_superuser=False)
     return render(request,'TM_template/Admin/allocate_m_roperty.html',{'obj_msp':obj_msp,'obj_agent':obj_agent})
+
+def master_property_soldout(request,msp_id):
+    obj_msp=TblMasterProperty.objects.get(id=msp_id)
+    try:
+        obj_msp.msp_is_active=False
+        obj_msp.save()
+        
+    except Exception as e:
+        print("Error: ",e)
+    return HttpResponseRedirect(reverse(master_property_view))
+
+def property_listview(request):
+    try:
+        property_list=TblProperty.objects.all()
+
+    except Exception as e:
+        property_list = None
+        print('----> Error :', e)
+    property_list=TblProperty.objects.all()
+    mp_list=TblMasterProperty.objects.all()
+    return render(request,'TM_template/Admin/property_view.html',{'property_list':property_list,'mp_list':mp_list})
+
+def property_soldout(request,pr_id):
+    obj_pr=TblProperty.objects.get(id=pr_id)
+    try:
+        obj_pr.pr_is_active=False
+        obj_pr.save()        
+    except Exception as e:
+        print("Error: ",e)
+    return HttpResponseRedirect(reverse(property_listview))
+
+def contactus(request):
+    return render(request,'TM_template/contact.html')
+
+def view_tenants(request):
+    tenantlist=TblTenant.objects.filter(tn_agent_id=request.user.id)
+    return render(request,'TM_template/Agent/view_tenant.html',{'tenantlist':tenantlist})
+
+# Creating Clone Input boxes according to user input
+@for_admin
+def clone_list(request):
+    clones = TblMasterPropertyClone.objects.filter(cln_master=request.GET['msp']).order_by('id')
+    return render(request, 'TM_template/Admin/clone_list.html', {'clones': clones})
+
+# returning search result of agent requests.
+def get_agents(starts_with=''):
+    agents = []
+    if starts_with:
+        agents = TblAgent.objects.filter(first_name__istartswith=starts_with,
+                                         is_active=False,
+                                         is_staff=False).order_by('first_name',
+                                                                  'last_name')
+        print(agents)
+    else:
+        agents = TblAgent.objects.filter(is_active=False,
+                                         is_staff=False).order_by('first_name',
+                                                                  'last_name')
+    return agents
+
+
+# View the search result from agent requests
+@for_admin
+def agent_requests_search(request):
+    agents = []
+    starts_with = ''
+    if request.method == 'GET':
+        if 'suggestion' in request.GET.keys():
+            starts_with = request.GET['suggestion']
+        agents = get_agents(starts_with)
+        print("ajax",agents)
+    return render(request, 'TM_template/Admin/s_agents.html', {'agents': agents})
+
+# Creating Clone Input boxes according to user input
+def create_clone_list(request):
+    no = request.GET['clone_no']
+    if no == '':
+        no = 0
+    return render(request, 'TM_template/Admin/clone_input_list.html', {'no': range(1, int(no)+1)})

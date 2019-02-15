@@ -2,13 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.utils.deconstruct import deconstructible
+
 # from phonenumber_field.modelfields import PhoneNumberField
 
 # Validator for indian phone number formant.
-phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
+phone_regex = RegexValidator(regex=r'^\+?1?\d{10}$',
                              message="""Phone number must
                               be entered in the format: 
-                            '+999999999'. Up to 13 digits
+                            '+999999999'. 10 digits
                              allowed.""")
 
 # Create your models here.
@@ -30,22 +31,18 @@ class TblAgent(AbstractUser):
     ag_profile_image = models.ImageField(upload_to='agents/profiles',
                                          blank=True)
 
-    def normal_save(self, *args, **kwargs):
+    # Overriding save method to save dafault user
+    def agent_save(self, *args, **kwargs):
         self.is_active = False
         self.is_staff = False
+        # self.set_password (AbstractUser.password)
         self.is_superuser = False
         super(TblAgent, self).save(*args, **kwargs)
 
     def verified_save(self, *args, **kwargs):
         self.is_active = True
         self.is_staff = True
-        self.is_superuser = False
-        super(TblAgent, self).save(*args, **kwargs)
-
-    def retire_agent(self, *args, **kwargs):
-        self.is_active=False
-        self.is_staff = True
-        self.is_superuser = False
+        # self.is_superuser = False
         super(TblAgent, self).save(*args, **kwargs)
 
     class Meta:
@@ -104,21 +101,45 @@ class TblMasterProperty(models.Model):
                                    blank=False, max_length=255)
     # description of property
     msp_description = models.CharField(max_length=255, null=True)
-    # Status of allocation of property
-    msp_is_allocated = models.BooleanField(default=False)
+    
     msp_is_active = models.BooleanField(default=True)
+
+    def new_save(self, *args, **kwargs):
+        clone = TblMasterPropertyClone.objects.create(
+            cln_alias=self.msp_name+" master clone",
+            cln_master=self,
+            cln_is_master_clone=True,
+            cln_is_allocated=False,
+            cln_is_active=True,
+            )
+        clone.save()
+        super(TblMasterProperty, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = 'Master Properties'
 
     def __str__(self):
-        return self.msp_name 
+        return self.msp_address
+
+
+# Creating master property clone for multiple Allocation
+class TblMasterPropertyClone(models.Model):
+    # Alias Name for the Clone property
+    cln_alias = models.CharField(max_length=100,)
+    # Master property Reference
+    cln_master = models.ForeignKey(TblMasterProperty, on_delete=models.CASCADE)
+    # Check for Master Clone
+    cln_is_master_clone = models.BooleanField(default=False)
+    #check if clone is allocated
+    cln_is_allocated = models.BooleanField(default=False)
+# check if clone is active
+    cln_is_active = models.BooleanField(default=True)
 
 
 # Property Table
 class TblProperty(models.Model):
-    # Master property reference
-    pr_master = models.ForeignKey(TblMasterProperty,
+    # Master clone's property reference
+    pr_master = models.ForeignKey(TblMasterPropertyClone,
                                   on_delete=models.CASCADE)
     # Address of property
     pr_address = models.CharField(max_length=255)
@@ -126,6 +147,8 @@ class TblProperty(models.Model):
     pr_rent = models.DecimalField(decimal_places=2, max_digits=10)
     # Fixed safety deposite for property
     pr_deposite = models.DecimalField(decimal_places=2, max_digits=10)
+    # Description of property about facilities rooms etc
+    pr_description = models.CharField(max_length=100,default="")
     # allocation status of property
     pr_is_allocated = models.BooleanField(default=False)
     pr_is_active = models.BooleanField(default=True)
@@ -164,7 +187,7 @@ class TblAgentAllocation(models.Model):
     al_agent = models.ForeignKey(TblAgent,
                                  on_delete=models.CASCADE)
     # Master property reference
-    al_master = models.ForeignKey(TblMasterProperty,
+    al_master = models.ForeignKey(TblMasterPropertyClone,
                                   on_delete=models.CASCADE)
 
     class Meta:

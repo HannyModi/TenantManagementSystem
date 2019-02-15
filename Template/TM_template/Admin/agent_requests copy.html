@@ -1,0 +1,114 @@
+{% extends 'TM_template/Admin/Base.html' %}
+{% load staticfiles %}
+{% block titleblock %}
+Agent List
+{% endblock %}
+{% block bodyblock %}
+<section id="inner-headline">
+    <div class="container">
+        <div class="row">
+            <div class="span12">
+                <div class="inner-heading">
+                    <ul class="breadcrumb">
+                        <li><a href="{% url 'adminhome' %}"><i class="icon-home"></i> Home</a> <i class="icon-angle-right"></i></li>
+                        <li class="active">Agent Requests</li>
+                    </ul>
+                    <h2>Agent Requests</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="container">
+    <div class="container">
+        <div class="row">
+            <div class="span10">
+
+                <div style="background-image: url('images/bg-01.jpg');">
+                    
+                            {% if agents %}
+                            <input placeholder="Enter agent name to search" class="span10" id="search" type="text">
+                            {% endif %}
+                            <div id="tbl_agents" >
+                            {% if agents %}
+                        <table class="table">
+                                <div id="tbl_agents_head" >
+                            <tr class="success">
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Email</th>
+                                <th colspan="2">Address</th>
+                                <th>Date of Request</th>
+                                <th>Profile</th>
+                                <th>Accept</th>
+                                <th>Reject</th>
+                                <th>View</th>
+                            </tr>
+                        </div>
+                        <div id="tbl_agents_body" >
+                            {% for agent in agents %}
+                            <tr class="info">
+                                <td>{{ agent.first_name }} {{ agent.lsat_name }}</td>
+                                <td>{{ agent.ag_contact }}</td>
+                                <td>{{ agent.email }}</td>
+                                <td colspan="2">{{ agent.ag_local_address }}</td>
+                                <td>{{ agent.date_joined }}</td>
+                                <td> <img src="{{ MEDIA_URL }}{{ agent.ag_profile_image }}" height="100px" width="100px" alt="{{ agent.username }}">
+                                </td>
+                                <td>
+                                    <form method="POST" action="{% url 'agent_request_accept' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ agent.id }}">
+                                        <input type="submit" class="btn btn-success" name="submit" value="Accept">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{% url 'agent_request_reject' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="aid" value="{{ agent.id }}">
+                                        <input type="submit" name="submit" class="btn btn-theme" value="Reject">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{% url 'agent_profile' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="aid" value="{{ agent.id }}">
+                                        <input type="submit" class="btn btn-info" name="submit" value="View">
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </div>
+                        </table>
+                        <div class="pagination">
+                                <ul class="pagination">
+                                    {% if agents.has_previous %}
+                                    <li class="active"><a href="?page={{ agents.previous_page_number }}">Prev</a></li>
+                                    {% else %}
+                                    <li class="disabled"><a href="">Prev</a></li>
+                                    {% endif %}
+                                    {% for i in agents.paginator.page_range %}
+                                    {% if agents.number == i %}
+                                    <li class="active"><a href="">{{ i }} </a></li>
+                                    {% else %}
+                                    <li><a href="?page={{ i }}">{{ i }}</a></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if agents.has_next %}
+                                    <li><a href="?page={{ agents.next_page_number }}">Next</a></li>
+                                    {% else %}
+                                    <li class="disabled"><span>Next</span></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        {% else %}
+                        <strong>No new Requests.</strong>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

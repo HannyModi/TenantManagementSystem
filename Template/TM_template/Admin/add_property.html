@@ -1,4 +1,4 @@
-{% extends 'TM_template/Admin/Base.html'%}
+{% extends 'TM_template/Admin/base.html' %}
 {% load staticfiles%}
 {% block titleblock %}Add Property
 {% endblock %}
@@ -22,27 +22,48 @@
     <div class="container">
         <div class="row">
             <div class="span10">
-
+                <strong style="color: red;"> {% autoescape off %} {{ context }}{% endautoescape %}</strong></br>
+                <strong style="color: green;">{% autoescape off %}{{ success }}{% endautoescape %}</strong>
                 <div style="background-image: url('images/bg-01.jpg');">
                     <div>
                         <form enctype="multipart/form-data" role="form" class="contactForm" action="" method="POST"
-                            id="AddMPForm">
+                            id="AddMPForm" onsubmit="return validateForm()">
                             {% csrf_token %}
                             Select Property:
-                            <select name="msp" class="form-data">
-                                <option >Select item</option>
+                            <select name="pr_msp" required class="form-data" id="msp_list" placeholder="new hint" required>
+                                <option value="" >Select item</option>
                                 {% for item in address_list %}
-                                <option  value={{item.id}}>{{item.msp_name}} {{item.msp_address}}</option>
+                                <option  value={{item.id}}> {{item.msp_name}} {{item.msp_address}}</option>
                                 {% endfor %}
                             </select><br />
+                            
+                            <div id="property" class="hidden">
+                               
+                            </div>
+                            
+                            <input name="pr_num" id="num" type="hidden" value="1"/>
                             Address:
-                            <input type="text" name="paddress"/><br />
+                            {% comment %} <input type="text" required name="pr_address0"/> {% endcomment %}
+                             <div class="widget" id="addresses">
+                                <div class="input-append" style="display:flex;" >
+                                <input class="span2" id="appendedInputButton" name="pr_address0" type="text">
+                                <button class="btn btn-theme" id="add_address" type="button"><i class="icon-plus"></i></button>
+                                </div>
+                            </div>
+                            {% comment %} <div >
+                            
+                            </div> {% endcomment %}
+                            {% comment %} <a id="add_address"  class="icon-plus-sign"></a> {% endcomment %}
+                            
+                            <br />
                             Rent:
-                            <input type="text" name="prent" /><br />
+                            <input type="text" required class="decimal_input" maxlength="10"  name="pr_rent" /><br />
                             Deposite:
-                            <input type="text" name="pdeposite" /><br />
-
-                            <button type="submit" class='btn btn-success'>Add Property</button>
+                            <input type="text" required class="decimal_input" maxlength="12" name="pr_deposite" /><br />
+                            Description:
+                            <textarea name="pr_description" required="True"></textarea><br/>
+                            
+                            <button type="submit" id="btn_submit" class='btn btn-success'>Add Property</button>
                         </form>
                     </div>
                 </div>
