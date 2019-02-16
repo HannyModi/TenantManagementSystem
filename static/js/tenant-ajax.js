@@ -31,6 +31,15 @@ $('#search').keyup(function () {
     });
 });
 
+// Searching in Agent request on search textbox
+$('#searchAgents').keyup(function () {
+    var query;
+    query = $(this).val();
+    $.get('/Admin/active_agent_search/', { suggestion: query }, function (data) {
+        $('#tbl_agents').html(data);
+    });
+});
+
 // Enabling User to create clone 
 // Showing user clone_div area to create clone
 $("#create_clone").change(function () {

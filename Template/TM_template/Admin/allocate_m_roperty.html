@@ -25,12 +25,22 @@
 
                 <div style="background-image: url('images/bg-01.jpg');">
                     <div>
-                        <form role="form" class="contactForm" action="{% url 'allocate_msp' obj_msp.id %}" method="POST"
+                        <form role="form" class="contactForm" action="{% url 'allocate_msp' %}" method="POST"
                             id="AddMPForm">
                             {% csrf_token %}                            
                             Master Property:
-                            <input type="hidden" value='{{obj_msp.id}}' name="msp">
-                            <input type=text  value='{{obj_msp.msp_name}}' disabled/> <br/>
+                            
+                            <select name="pr_msp" required class="form-data" id="msp_list" placeholder="new hint" required>
+                                <option value="" >Select item</option>
+                                {% for item in obj_msp %}
+                                <option  value={{item.id}}> {{item.msp_name}} {{item.msp_address}}</option>
+                                {% endfor %}
+                            </select><br />
+                            
+                            <div id="property" class="hidden">
+                               
+                            </div>
+                        
                             Agent:
                             <select name="agentx" >
                                 <option >Select item</option>

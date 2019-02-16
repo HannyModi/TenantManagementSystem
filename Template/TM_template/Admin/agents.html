@@ -1,35 +1,5 @@
-{% extends 'TM_template/Admin/Base.html'%}
-{% load staticfiles%}
-{% block titleblock %}Admin Home{% endblock %}
-{% block bodyblock %}
-<section id="inner-headline">
-    <div class="container">
-        <div class="row">
-            <div class="span12">
-                <div class="inner-heading">
-                    <ul class="breadcrumb">
-                        <li><a href="{% url 'adminhome' %}"><i class="icon-home"></i> Home</a> <i
-                                class="icon-angle-right"></i></li>
-                        <li class="active">View Agents</li>
-                    </ul>
-                    <h2>View Approved Agents</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<section id="container">
-    <div class="container">
-        <div class="row">
-            <div>
-
-                <div style="background-image: url('images/bg-01.jpg');">
-                    {% if agents %}
-                    <input placeholder="Enter agent name to search" class="span10" id="searchAgents" type="text">
-                    {% endif %}
-                    <div id="tbl_agents">            
-
-                        {% if agents %}
+<div >
+        {% if agents %}
                         <table class="table fixed_header">
                             <thead>
                                 <tr class="success">
@@ -79,11 +49,5 @@
                         {% else %}
                         No Agents Approved
                         {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-</section>
-
-{% endblock %}
+    

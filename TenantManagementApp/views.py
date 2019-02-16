@@ -218,7 +218,7 @@ def add_property(request):
 @for_admin
 def view_approved_agent(request):
     try:
-        agents = TblAgent.objects.filter(is_active=True, is_staff=True, is_superuser=False).order_by('first_name', 'last_name')
+        agents = TblAgent.objects.filter(is_staff=True, is_superuser=False).order_by('first_name', 'last_name')
     except Exception as e:
         agents = None
         print('----> Error :', e)
@@ -231,7 +231,12 @@ def agent_request_retire(request):
     id = request.POST['aid']
     agent = TblAgent.objects.filter(id=id)
     for obj in agent:
-        obj.retire_agent()
+        if obj.is_active:
+            obj.is_active=False
+            obj.save()
+        else:
+            obj.is_active=True
+            obj.save()
     return HttpResponseRedirect(reverse(view_approved_agent))
 
 def master_property_view(request):
@@ -244,25 +249,29 @@ def master_property_view(request):
     allocated_mp=TblAgentAllocation.objects.all()
     return render(request,'TM_template/Admin/master_property_view.html',{'master_property_list':master_property_list,'allocated_mp':allocated_mp})
 
-def allocate_msp(request,msp_id=None):
-    obj_msp=TblMasterProperty.objects.get(id=msp_id)
+def allocate_msp(request):
+    obj_msp=TblMasterProperty.objects.all()
     obj_agent=[]
     if request.method=='POST':
-        al_master=TblMasterProperty.objects.get(id=request.POST['msp'])
+        # al_master=TblMasterProperty.objects.get(id=request.POST['pr_msp'])
+        al_master=TblMasterPropertyClone.objects.get(id=request.POST['pr_msp_clone'])
         al_agent=TblAgent.objects.get(id=request.POST['agentx'])        
         obj=TblAgentAllocation.objects.get_or_create(al_agent=al_agent,al_master=al_master)
         print(obj[1])
         obj[0].save()
-        return HttpResponseRedirect(reverse(adminhome))
+        # return HttpResponseRedirect(reverse(adminhome))
 
     obj_agent=TblAgent.objects.filter(is_active=True, is_staff=True,is_superuser=False)
     return render(request,'TM_template/Admin/allocate_m_roperty.html',{'obj_msp':obj_msp,'obj_agent':obj_agent})
 
 def master_property_soldout(request,msp_id):
     obj_msp=TblMasterProperty.objects.get(id=msp_id)
+    mpclone_list=TblMasterPropertyClone.objects.filter(cln_master_id=msp_id)
+    print(mpclone_list)
     try:
         obj_msp.msp_is_active=False
         obj_msp.save()
+
         
     except Exception as e:
         print("Error: ",e)
@@ -270,14 +279,14 @@ def master_property_soldout(request,msp_id):
 
 def property_listview(request):
     try:
-        property_list=TblProperty.objects.all()
-
+        property_list=property_view.objects.all().order_by('pr_address','msp_address')
+        # .values('cln_alias')
+        # print(property_list.count())
+        # print(property_list)
     except Exception as e:
         property_list = None
         print('----> Error :', e)
-    property_list=TblProperty.objects.all()
-    mp_list=TblMasterProperty.objects.all()
-    return render(request,'TM_template/Admin/property_view.html',{'property_list':property_list,'mp_list':mp_list})
+    return render(request,'TM_template/Admin/property_view.html',{'property_list':property_list,})
 
 def property_soldout(request,pr_id):
     obj_pr=TblProperty.objects.get(id=pr_id)
@@ -304,12 +313,29 @@ def clone_list(request):
 # returning search result of agent requests.
 def get_agents(starts_with=''):
     agents = []
-    if starts_with:
-        agents = TblAgent.objects.filter(first_name__istartswith=starts_with,
-                                         is_active=False,
-                                         is_staff=False).order_by('first_name',
+    first_name=starts_with
+    last_name=None
+    if ' ' in starts_with:
+        list1=starts_with.split(' ')
+        first_name=list1[0]
+        last_name=list1[1]
+
+    if first_name :
+        if last_name:
+            
+            agents = TblAgent.objects.filter(first_name__istartswith=first_name,
+            last_name__istartswith=last_name,
+                                            is_active=False,
+                                            is_staff=False).order_by('first_name',
                                                                   'last_name')
+        else:
+
+            agents = TblAgent.objects.filter(first_name__istartswith=first_name,
+                                            is_active=False,
+                                            is_staff=False).order_by('first_name',
+                                                                    'last_name')
         print(agents)
+
     else:
         agents = TblAgent.objects.filter(is_active=False,
                                          is_staff=False).order_by('first_name',
@@ -329,9 +355,55 @@ def agent_requests_search(request):
         print("ajax",agents)
     return render(request, 'TM_template/Admin/s_agents.html', {'agents': agents})
 
+
+
 # Creating Clone Input boxes according to user input
 def create_clone_list(request):
     no = request.GET['clone_no']
     if no == '':
         no = 0
     return render(request, 'TM_template/Admin/clone_input_list.html', {'no': range(1, int(no)+1)})
+
+# returning search result of all agent.
+def get_active_agents(starts_with=''):
+    agents = []
+    first_name=starts_with
+    last_name=None
+    if ' ' in starts_with:
+        list1=starts_with.split(' ')
+        first_name=list1[0]
+        last_name=list1[1]
+
+    if first_name :
+        if last_name:
+            
+            agents = TblAgent.objects.filter(first_name__istartswith=first_name,
+            last_name__istartswith=last_name,is_superuser=False,
+                                            is_staff=True).order_by('first_name',
+                                                                  'last_name')
+        else:
+
+            agents = TblAgent.objects.filter(first_name__istartswith=first_name,
+                                            is_superuser=False,
+                                            is_staff=True).order_by('first_name',
+                                                                    'last_name')
+        print(agents)
+
+    else:
+        agents = TblAgent.objects.filter(is_staff=True, is_superuser=False).order_by('first_name',
+                                                                                     'last_name')
+    return agents
+
+
+# View the search result from all agent
+@for_admin
+def active_agent_search(request):
+    agents = []
+    starts_with = ''
+    if request.method == 'GET':
+        if 'suggestion' in request.GET.keys():
+            starts_with = request.GET['suggestion']
+        agents = get_active_agents(starts_with)
+        print("ajax",agents)
+    return render(request, 'TM_template/Admin/agents.html', {'agents': agents})
+

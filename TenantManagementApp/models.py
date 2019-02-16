@@ -159,6 +159,26 @@ class TblProperty(models.Model):
     def __str__(self):
         return self.pr_address
 
+class property_view(models.Model):
+    id=models.BigIntegerField(primary_key=True)
+    pr_address=models.CharField(max_length=255)
+    pr_rent=models.DecimalField(decimal_places=2, max_digits=10)
+    pr_deposite=models.DecimalField(decimal_places=2, max_digits=10)
+    pr_is_allocated=models.BooleanField(default=False)
+    pr_is_active=models.BooleanField(default=True)
+    pr_master =models.ForeignKey(TblMasterPropertyClone,
+                                  on_delete=models.DO_NOTHING)
+    pr_description=models.CharField(max_length=100,default="")
+    cln_alias=models.CharField(max_length=100,)
+    cln_master =models.ForeignKey(TblMasterProperty, on_delete=models.DO_NOTHING)
+    msp_name=models.CharField(max_length=30, default='My Property')
+    msp_address=models.CharField(null=False,
+                                   blank=False, max_length=255)
+    msp_is_active=models.BooleanField(default=True)
+
+    class Meta:
+        managed=False
+        db_table="property_view"
 
 # Visit Table
 class TblVisit(models.Model):
