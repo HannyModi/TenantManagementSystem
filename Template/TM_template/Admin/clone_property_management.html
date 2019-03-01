@@ -1,0 +1,220 @@
+{% extends 'TM_template/Admin/Base.html'%}
+{% load staticfiles%}
+{% block titleblock %}Manage Clones
+{% endblock %}
+{% block bodyblock %}
+
+<section id="inner-headline">
+    <div class="container">
+        <div class="row">
+            <div class="span12">
+                <div class="inner-heading">
+                    <ul class="breadcrumb">
+                        <li><a href="{% url 'adminhome' %}"><i class="icon-home"></i> Home</a> <i class="icon-angle-right"></i></li>
+                        <li class="active">Allocate Property in Clone</li>
+                    </ul>
+                    <h2>Allocate Property in Clone</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section id="container">
+    <div class="container">
+        <div class="row">
+            <div class="span10">
+                <!-- <div class="alert alert-success alert-dismissable">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <strong>Success!</strong> Property Allocated Successfully.
+                  </div> -->
+                  
+                <div style="background-image: url('images/bg-01.jpg');">
+                    <div>
+                        <!-- <form role="form" class="contactForm" action="." method="POST"
+                            id="AddMPForm">-->
+                           {% csrf_token %}                           
+                            Master Property:
+                            
+                            <select style="width: 75%" name="pr_msp" required class="form-data" id="msp_list_manage" placeholder="new hint" required>
+                                <option value="" selected="selected">Select Master Property</option>
+                                {% for item in obj_msp %}
+                                <option  value={{item.id}}> {{item.msp_name}} {{item.msp_address}}</option>
+                                {% endfor %}
+                            </select><br />
+                            <br/>
+                            Clones:<label>ABC</label>
+                                <Select style="width: 75%" id="property_list" multiple>
+                                    
+
+                                </Select>
+                            <div id="all_clones" class="hidden">
+                               
+                            </div>
+                        <br/>
+                                      
+        <div class="form-row field-user_permissions">
+            
+            
+                <div>
+                    
+                    
+                        <label for="id_user_permissions">User permissions:</label>
+                        
+                            <div class="related-widget-wrapper">
+    <select style="width: 75%" name="user_permissions" id="id_user_permissions" multiple class="selectfilter" data-field-name="user permissions" data-is-stacked="0">
+  <option value="61">TenantManagementApp | allocated_property_view | Can add allocated_property_view</option>
+
+  <option value="62">TenantManagementApp | allocated_property_view | Can change allocated_property_view</option>
+
+  <option value="63">TenantManagementApp | allocated_property_view | Can delete allocated_property_view</option>
+
+  <option value="64">TenantManagementApp | allocated_property_view | Can view allocated_property_view</option>
+
+  <option value="57">TenantManagementApp | property_view | Can add property_view</option>
+
+  <option value="58">TenantManagementApp | property_view | Can change property_view</option>
+
+  <option value="59">TenantManagementApp | property_view | Can delete property_view</option>
+
+  <option value="60">TenantManagementApp | property_view | Can view property_view</option>
+
+  <option value="49">TenantManagementApp | tbl agent | Can add tbl agent</option>
+
+  <option value="50">TenantManagementApp | tbl agent | Can change tbl agent</option>
+
+  <option value="51">TenantManagementApp | tbl agent | Can delete tbl agent</option>
+
+  <option value="52">TenantManagementApp | tbl agent | Can view tbl agent</option>
+
+  <option value="21">TenantManagementApp | tbl agent allocation | Can add tbl agent allocation</option>
+
+  <option value="22">TenantManagementApp | tbl agent allocation | Can change tbl agent allocation</option>
+
+  <option value="23">TenantManagementApp | tbl agent allocation | Can delete tbl agent allocation</option>
+
+  <option value="24">TenantManagementApp | tbl agent allocation | Can view tbl agent allocation</option>
+
+  <option value="25">TenantManagementApp | tbl master property | Can add tbl master property</option>
+
+  <option value="26">TenantManagementApp | tbl master property | Can change tbl master property</option>
+
+  <option value="27">TenantManagementApp | tbl master property | Can delete tbl master property</option>
+
+  <option value="28">TenantManagementApp | tbl master property | Can view tbl master property</option>
+
+  <option value="53">TenantManagementApp | tbl master property clone | Can add tbl master property clone</option>
+
+  <option value="54">TenantManagementApp | tbl master property clone | Can change tbl master property clone</option>
+
+  <option value="55">TenantManagementApp | tbl master property clone | Can delete tbl master property clone</option>
+
+  <option value="56">TenantManagementApp | tbl master property clone | Can view tbl master property clone</option>
+
+  <option value="29">TenantManagementApp | tbl property | Can add tbl property</option>
+
+  <option value="30">TenantManagementApp | tbl property | Can change tbl property</option>
+
+  <option value="31">TenantManagementApp | tbl property | Can delete tbl property</option>
+
+  <option value="32">TenantManagementApp | tbl property | Can view tbl property</option>
+
+  <option value="33">TenantManagementApp | tbl property allocation | Can add tbl property allocation</option>
+
+  <option value="34">TenantManagementApp | tbl property allocation | Can change tbl property allocation</option>
+
+  <option value="35">TenantManagementApp | tbl property allocation | Can delete tbl property allocation</option>
+
+  <option value="36">TenantManagementApp | tbl property allocation | Can view tbl property allocation</option>
+
+  <option value="37">TenantManagementApp | tbl rent allocation | Can add tbl rent allocation</option>
+
+  <option value="38">TenantManagementApp | tbl rent allocation | Can change tbl rent allocation</option>
+
+  <option value="39">TenantManagementApp | tbl rent allocation | Can delete tbl rent allocation</option>
+
+  <option value="40">TenantManagementApp | tbl rent allocation | Can view tbl rent allocation</option>
+
+  <option value="41">TenantManagementApp | tbl tenant | Can add tbl tenant</option>
+
+  <option value="42">TenantManagementApp | tbl tenant | Can change tbl tenant</option>
+
+  <option value="43">TenantManagementApp | tbl tenant | Can delete tbl tenant</option>
+
+  <option value="44">TenantManagementApp | tbl tenant | Can view tbl tenant</option>
+
+  <option value="45">TenantManagementApp | tbl visit | Can add tbl visit</option>
+
+  <option value="46">TenantManagementApp | tbl visit | Can change tbl visit</option>
+
+  <option value="47">TenantManagementApp | tbl visit | Can delete tbl visit</option>
+
+  <option value="48">TenantManagementApp | tbl visit | Can view tbl visit</option>
+
+  <option value="1">admin | log entry | Can add log entry</option>
+
+  <option value="2">admin | log entry | Can change log entry</option>
+
+  <option value="3">admin | log entry | Can delete log entry</option>
+
+  <option value="4">admin | log entry | Can view log entry</option>
+
+  <option value="9">auth | group | Can add group</option>
+
+  <option value="10">auth | group | Can change group</option>
+
+  <option value="11">auth | group | Can delete group</option>
+
+  <option value="12">auth | group | Can view group</option>
+
+  <option value="5">auth | permission | Can add permission</option>
+
+  <option value="6">auth | permission | Can change permission</option>
+
+  <option value="7">auth | permission | Can delete permission</option>
+
+  <option value="8">auth | permission | Can view permission</option>
+
+  <option value="13">contenttypes | content type | Can add content type</option>
+
+  <option value="14">contenttypes | content type | Can change content type</option>
+
+  <option value="15">contenttypes | content type | Can delete content type</option>
+
+  <option value="16">contenttypes | content type | Can view content type</option>
+
+  <option value="17">sessions | session | Can add session</option>
+
+  <option value="18">sessions | session | Can change session</option>
+
+  <option value="19">sessions | session | Can delete session</option>
+
+  <option value="20">sessions | session | Can view session</option>
+
+</select>
+    
+        
+    
+</div>
+                        
+                    
+                    
+                        <div class="help">Specific permissions for this user. Hold down "Control", or "Command" on a Mac, to select more than one.</div>
+                    
+                </div>
+            
+        </div>
+    
+
+                        
+                        <!-- </form> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+
+                    
+         

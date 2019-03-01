@@ -27,10 +27,11 @@ Add Tenent
   <div class="container">
     <div class="row">
       <div class="span8">
-        <form action="" method="post" enctype="multipart/form-data" role="form" class="contactForm">
+        <form action="addTenant" method="post" enctype="multipart/form-data" role="form" class="contactForm">
           {% csrf_token %}
           {% for hidden in form.hidden_fields %}
           {{ hidden }}
+          {{hidden.errors}}
           {% endfor %}
           {% for field in form.visible_fields %}
           {{ field.errors }}

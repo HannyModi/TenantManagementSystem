@@ -11,7 +11,7 @@ urlpatterns = [
     path('allocate_master_property/',views.allocate_msp,name='allocate_msp'),
     # path('(P?<msp_id>[\w\-]+)/allocate_master_property/',views.allocate_msp,name='allocate_msp'),
     path('(P?<msp_id>[\w\-]+)/master_property_soldout/',views.master_property_soldout,name='master_property_soldout'),
-    path('(P?<pr_id>[\w\-]+)/property_soldout/',views.property_soldout,name='property_soldout'), 
+    path('property_soldout/',views.property_soldout,name='property_soldout'), 
     path('properties/',views.property_listview,name='property_listview'),   
     path('agent_profile/',views.agent_profile, name='agent_profile'),
     path('add/property/',views.add_property,name='add_property'),
@@ -19,8 +19,18 @@ urlpatterns = [
     path('home/',views.adminhome,name='adminhome'),
     path('master_clone_list/',views.create_clone_list,name='admin_create_clone_list'),
     path('property_clone_list/',views.clone_list,name='admin_show_clone_list'),
+    path('unallocated_clone_list/',views.unallocated_clone_list,name='unallocated_clone_list'),
     path('agent_request_search/',views.agent_requests_search, name='agent_requests_search'),
     path('active_agent_search/',views.active_agent_search, name='active_agent_search'),
-
-
+    path('create_clone/',views.create_clone,name='create_clone'),
+     # Showing the data on master property
+    path('show_data/', views.show_data, name='admin_show_data'),
+    # Deallocating property
+    path('deallocate_clone/', views.deallocate_clone,
+         name='admin_deallocate_clone'),
+    # Editing property
+    path('edit_property/', views.edit_property, name='admin_edit_property'),
+   # Deleting Master Properties
+    path('delete_master_property/', views.delete_master_property,
+         name='admin_delete_master_property'),
 ]

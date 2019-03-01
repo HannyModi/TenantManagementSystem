@@ -1,0 +1,96 @@
+{% load staticfiles%}
+
+    {% if tenantlist %}
+<table class="table fixed_header">
+        <thead>
+        <tr class="success">
+            <th>Name</th>
+            <th>Contact</th>
+            <!-- <th colspan="2">Email</th> -->
+            <th colspan="2">Address</th>
+            <th>Profile</th>
+            <th>Tenant Document</th>
+            <th>Status</th>
+            <th>View</th>
+            <th>Allocate</th>
+            <th>Visit</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for tenant in tenantlist %}
+        
+        <tr>
+            <td>{{ tenant.tn_name }}</td>
+            <td>{{ tenant.tn_contact }}</td>
+            <!-- <td colspan="2">{{ tenant.email }}</td> -->
+            <td colspan="2">{{ tenant.tn_permanent_address }}</td>
+          
+            <td>
+                    
+                            <img id='p_image' class="pimg" src="{{ MEDIA_URL }}{{ tenant.tn_profile }}"
+                                style="height:50px; width:100px;"
+                                alt="{{tenant.tn_name}}'s Profile Picture">
+                                <div id="imgDiv" class="modal2">
+                                        <span class="close">&times;</span>
+                                        <img class="modal2-content" id="img01">
+                                        <div id="caption"></div>
+                                    </div>
+                                
+                        
+                   
+                </td>
+                <td>
+                        
+
+                       <img id='d_image' class="pimg" src="{{ MEDIA_URL }}{{ tenant.tn_document }}"
+                                style="height:50px; width:100px;"
+                                alt="{{tenant.tn_name}}'s Document">
+                                <div id="imgDiv" class="modal2">
+                                        <span class="close">&times;</span>
+                                        <img class="modal2-content" id="img01">
+                                        <div id="caption"></div>
+                                    </div>
+                </td>
+            <td>
+                <form method="POST" action="{% url 'change_tenant_status' %}">
+
+                    {% csrf_token %}
+                    <input type="hidden" name="tid" value="{{ tenant.id }}">
+                    <input type="submit" name="submit" class="btn btn-danger btn-rounded"
+                        {% if tenant.tn_is_active == True %} value="Deactivate" {% else %}
+                        value="Activate" {% endif %}>
+                </form>
+            </td>
+            <td>
+                <form method="POST" action="{% url 'TenantDetails' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="tid" value="{{ tenant.id }}">
+                    <input type="submit" class="btn btn-info btn-rounded" name="submit" value="View">
+                </form>
+            </td>
+
+            <td>
+                {% if tenant.tn_status == 3 %}
+                <button data-tid="{{ tenant.id }}" class="btn btn-success btn-rounded btn-small deallocate_tenant">Deallocate</button>
+                {% endif %}
+            {% if tenant.tn_status != 3 %}
+            <button data-tid="{{ tenant.id }}"  class="btn btn-success btn-rounded btn-small allocate_tenant">Allocate Property</button>
+            {% endif %}
+
+        </td>
+        <td>
+                <a data-tid="{{ tenant.id }}" class="addvisit">Add Visit</a></div>
+            </td>
+        </tr>
+
+        {% endfor %}
+    </tbody>
+    </table>
+ 
+    {% else %}
+
+    There are No Tenants
+  {% endif %}
+
+<script src="{% static 'js/tenant-ajax.js' %}"></script>

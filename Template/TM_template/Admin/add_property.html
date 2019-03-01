@@ -30,7 +30,7 @@
                             id="AddMPForm" onsubmit="return validateForm()">
                             {% csrf_token %}
                             Select Property:
-                            <select name="pr_msp" required class="form-data" id="msp_list" placeholder="new hint" required>
+                            <select style="width: 75%" name="pr_msp" required class="form-data" id="msp_list" placeholder="new hint" required>
                                 <option value="" >Select item</option>
                                 {% for item in address_list %}
                                 <option  value={{item.id}}> {{item.msp_name}} {{item.msp_address}}</option>
@@ -40,7 +40,7 @@
                             <div id="property" class="hidden">
                                
                             </div>
-                            
+                            <br/>
                             <input name="pr_num" id="num" type="hidden" value="1"/>
                             Address:
                             {% comment %} <input type="text" required name="pr_address0"/> {% endcomment %}

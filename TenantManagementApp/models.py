@@ -250,7 +250,7 @@ class TblPropertyAllocation(models.Model):
     # Starting date of agreement
     pa_agreement_date = models.DateField(null=False)
     # Ending date of Agreement
-    pa_agreement_and_date = models.DateField(null=False)
+    pa_agreement_end_date = models.DateField(null=False)
     # Copy of acceptance latter
     pa_acceptance_latter = models.ImageField(
         upload_to='rent/acceptance_latter')
@@ -261,10 +261,80 @@ class TblPropertyAllocation(models.Model):
     pa_final_rent = models.FloatField(max_length=10)
     # showing the current allocation status.
     # true for alloted ,false for previous allocation
-    pa_is_allocated = models.BooleanField(default=False)
+    pa_is_allocated = models.BooleanField(default=True)
 
     class Meta:
         verbose_name_plural = 'Property Allocation Details'
 
     def __str__(self):
         return self.pa_property.pr_address
+
+class allocated_property_view(models.Model):
+    property_id=models.BigIntegerField(primary_key=True)
+    pr_address=models.CharField(max_length=255)
+    pr_rent=models.DecimalField(decimal_places=2, max_digits=10)
+    pr_deposite=models.DecimalField(decimal_places=2, max_digits=10)
+    pr_is_allocated=models.BooleanField(default=False)
+    pr_is_active=models.BooleanField(default=True)
+    pr_master =models.ForeignKey(TblMasterPropertyClone,
+                                  on_delete=models.DO_NOTHING)
+    pr_description=models.CharField(max_length=100,default="")
+    cln_alias=models.CharField(max_length=100,)
+    cln_master =models.ForeignKey(TblMasterProperty, on_delete=models.DO_NOTHING)
+    msp_name=models.CharField(max_length=30, default='My Property')
+    msp_address=models.CharField(null=False,
+                                   blank=False, max_length=255)
+    msp_is_active=models.BooleanField(default=True)
+    allocation=models.ForeignKey(TblAgentAllocation,
+                                  on_delete=models.DO_NOTHING)
+    agent=models.ForeignKey(TblAgent,
+                                  on_delete=models.DO_NOTHING)
+    password=models.CharField(max_length=255)
+    last_login=models.DateField()
+    is_superuser=models.BooleanField()
+    username=models.CharField(max_length=255)
+    first_name=models.CharField(max_length=255)
+    last_name=models.CharField(max_length=255)
+    email=models.CharField(max_length=255)
+    is_staff=models.BooleanField()
+    is_active=models.BooleanField()
+    date_joined=models.DateField()
+    ag_contact = models.CharField(validators=[phone_regex],
+                                  null=False, blank=False,
+                                  unique=True, max_length=13)
+    # Local Address of Agent
+    ag_local_address = models.CharField(max_length=255)
+    # Permanent Address of Agent
+    ag_permanent_address = models.CharField(max_length=255)
+    # image of Agent
+    ag_profile_image = models.ImageField(upload_to='agents/profiles',
+                                         blank=True)
+
+    
+    class Meta:
+        managed=False
+        db_table="Agent_property_allocation"
+
+    def __str__(self):
+        return self.pr_address 
+
+
+# View of master property
+class ViewMasterProperties(models.Model):
+    id = models.BigIntegerField(primary_key=True)
+    msp_name = models.CharField(max_length=30, default='My Property')
+    msp_address = models.CharField(max_length=255)
+    msp_description= models.CharField(max_length=255)
+    msp_is_active = models.BooleanField(default=True)
+    no_of_clones = models.BigIntegerField()
+    allocated_clones = models.BigIntegerField()
+    unallocated_clones = models.BigIntegerField()
+    no_of_property = models.BigIntegerField()
+    allocated_properties = models.BigIntegerField()
+    unallocated_properties = models.BigIntegerField()
+
+    class Meta:
+        db_table = 'view_master_properties'
+        managed = False
+        verbose_name = 'Master Property '
+        verbose_name_plural = 'Master Properties'

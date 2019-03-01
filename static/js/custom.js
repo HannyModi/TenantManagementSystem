@@ -106,10 +106,10 @@ jQuery(document).ready(function ($) {
     controlDirections: true
   });
 
-  //prettyphoto
-  $("a[data-pretty^='prettyPhoto']").prettyPhoto({
-    social_tools: ''
-  });
+  // //prettyphoto
+  // $("a[data-pretty^='prettyPhoto']").prettyPhoto({
+  //   social_tools: ''
+  // });
 
   // tooltip
   $('.social-network li a, .options_box .color a').tooltip();

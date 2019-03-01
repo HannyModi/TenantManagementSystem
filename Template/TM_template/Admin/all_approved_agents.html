@@ -39,9 +39,10 @@
                                     <th colspan="3">Address</th>
                                     <th>Date of Request</th>
                                     <th>Profile</th>
-
+                            
                                     <th>Retire</th>
                                     <th>View</th>
+                                    <th>Allocate Property</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -60,16 +61,21 @@
                                         <form method="POST" action="{% url 'agent_request_retire' %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="aid" value="{{ agent.id }}">
-                                            <input type="submit" name="submit" class="btn btn-theme"{% if agent.is_active == True %} value="Retire" {% else %} value="Activate" {% endif %} >
+                                            <input type="submit" name="submit" class="btn-theme btn-rounded" {% if agent.is_active == True %} value="Retire" {% else %} value="Activate" {% endif %} >
                                         </form>
                                     </td>
                                     <td>
                                         <form method="POST" action="{% url 'agent_profile' %}">
                                             {% csrf_token %}
                                             <input type="hidden" name="aid" value="{{ agent.id }}">
-                                            <input type="submit" class="btn btn-info" name="submit" value="View">
+                                            <input type="submit" class="btn-info btn-rounded" name="submit" value="View">
                                         </form>
                                     </td>
+                                    <td class="allocation">
+                                            {% if agent.is_active %}
+                                                <input type="button" class="agent-allocate btn-success btn-rounded" data-id="{{ agent.id }}"  value="Allocate">
+                                            {% endif %}
+                                        </td>
                                 </tr>
 
                                 {% endfor %}

@@ -1,11 +1,11 @@
 {% if clones %}
-    Select Sub Property :
-    <select name="pr_msp_clone" class="form-data" id="msp_list" placeholder="new hint">
+   <br/> Select Sub Property :
+    <select style="width: 75%" name="pr_msp_clone" class="form-data" id="msp_list3" placeholder="new hint">
         {% for clone in clones %}
 
             <option value={{clone.id}}> {{clone.cln_alias}} </option>
         {% endfor %}
     </select><br />
 {% else %}
-    <strong>No clone Present For selected Property</strong>
+    <strong>No clone Present For selected Property/All Clones are allocated.</strong>
 {% endif %}

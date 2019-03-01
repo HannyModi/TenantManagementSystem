@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+# from TenantManagementApp.models import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -84,6 +85,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 STATICFILES_DIRS = [STATIC_DIR, ]
 
@@ -165,3 +167,9 @@ PASSWORD_RESET_TOKEN_EXPIRES=1
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
+
+# lst=TblAgentAllocation.objects.select_related('al_agent').select_related('al_master').all()
+# for obj in lst:
+#     print(obj.al_agent.username)
+# print("\n\n\n------------")
+

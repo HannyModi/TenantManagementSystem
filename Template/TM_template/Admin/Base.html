@@ -6,14 +6,109 @@
     <meta charset="utf-8">
     <title>Tenant Management - 
         {% block titleblock %}
-        Yo
+        Admin
         {% endblock %}
     </title>
 
 <style>
+.alert{
+    display: none;
+}
+
+.pimg:hover {
+            opacity: 0.7;
+        }
+
+        /* The Modal (background) */
+        .modal2 {
+            display: none;
+            /* Hidden by default */
+            position: fixed;
+            /* Stay in place */
+            z-index: 1;
+            /* Sit on top */
+            padding-top: 100px;
+            /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%;
+            /* Full width */
+            height: 100%;
+            /* Full height */
+            overflow: auto;
+            /* Enable scroll if needed */
+            background-color: rgb(0, 0, 0);
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.9);
+            /* Black w/ opacity */
+        }
+
+        /* Modal Content (Image) */
+        .modal2-content {
+            margin: auto;
+            display: block;
+            height: 70%;
+            width: 80%;
+            max-width: 700px;
+        }
+
+        /* Caption of Modal Image (Image Text) - Same Width as the Image */
+        #caption {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            color: #ccc;
+            padding: 10px 0;
+            height: 150px;
+        }
+
+        /* Add Animation - Zoom in the Modal */
+        .modal-content,
+        #caption {
+            animation-name: zoom;
+            animation-duration: 0.6s;
+        }
+
+        @keyframes zoom {
+            from {
+                transform: scale(0)
+            }
+
+            to {
+                transform: scale(1)
+            }
+        }
+
+        /* The Close Button */
+        .close {
+            color: #f1f1f1;
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 100% Image Width on Smaller Screens */
+        @media only screen and (max-width: 700px) {
+            .modal-content {
+                width: 100%;
+            }
+        }
+
 .fixed_header tbody {
   display: block;
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: scroll;
   border-collapse: collapse;
 
@@ -30,9 +125,65 @@ tbody tr {
     word-wrap:break-word;
 }
 
-     
+.fixed_header2 tbody {
+  display: block;
+  max-height: 200px;
+  overflow-y: scroll;
+  border-collapse: collapse;
 
-            </style>
+}
+
+.fixed_header2 thead,
+tbody tr {
+  display: table;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+} 
+.fixed_header2 td{
+    word-wrap:break-word;
+}
+
+ /* The Modal (background) */
+ .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: hidden; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+         .modal-content {
+        background-color: #ffece6;
+        margin: 15% 35%; /* 15% from the top and centered */
+         padding: 60px;
+        border: 5px solid #888;
+        width: 30%; /*Could be more or less, depending on screen size */
+        } 
+
+        /* The Close Button */
+        .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+        } 
+
+
+</style>
         
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Web site For Agents to provide property on rent to tenants." />
@@ -47,7 +198,7 @@ tbody tr {
     <link href="{% static "css/camera.css" %}" rel="stylesheet" />
     <link href="{% static "css/jquery.bxslider.css" %}" rel="stylesheet" />
     <link href="{% static 'css/style.css' %}" rel="stylesheet" />
-    <!-- <link href="../../static/css/style.css" rel="stylesheet" /> -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
     <!-- Theme skin -->
     <link href="{% static 'color/default.css' %}" rel="stylesheet" />
 
@@ -56,40 +207,30 @@ tbody tr {
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="ico/apple-touch-icon-114-precomposed.png" />
     <link rel="apple-touch-icon-precomposed" sizes="72x72" href="ico/apple-touch-icon-72-precomposed.png" />
     <link rel="apple-touch-icon-precomposed" href="ico/apple-touch-icon-57-precomposed.png" />
-    <link rel="shortcut icon" href="ico/favicon.png" />
-
-   
+    <link rel="shortcut icon" href="ico/favicon.png" /> 
 </head>
 <body>
-
-
+        
     <div id="wrapper">
         <!-- start header -->
-        <header>
-            <div class="top">
+     <header>
+             <div class="top"> 
                 <div class="container">
                     <div class="row">
                         <div class="span6"></div>
                         <div class="span6">
 
-                            <ul class="social-network">
-                                <li><a href="#" data-placement="bottom" title="Facebook"><i class="icon-facebook icon-white"></i></a></li>
-                                <li><a href="#" data-placement="bottom" title="Twitter"><i class="icon-twitter icon-white"></i></a></li>
-                                <li><a href="#" data-placement="bottom" title="Linkedin"><i class="icon-linkedin icon-white"></i></a></li>
-                                <li><a href="#" data-placement="bottom" title="Pinterest"><i class="icon-pinterest  icon-white"></i></a></li>
-                                <li><a href="#" data-placement="bottom" title="Google +"><i class="icon-google-plus icon-white"></i></a></li>
-                                <li><a href="#" data-placement="bottom" title="Dribbble"><i class="icon-dribbble icon-white"></i></a></li>
-                            </ul>
+                          
 
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> 
             <div class="container">
                 <div class="row nomargin">
                     <div class="span4">
                         <div class="logo">
-                           <h1> <a href="{% url 'adminhome' %}"><img src="{% static 'image/tmlogonew.png' %}" style="height:90px;" alt=""/></a></h1>
+                     <a href="{% url 'adminhome' %}"><img src="{% static 'image/tmlogonew.png' %}" style="height:90px;" alt=""/></a>
                         </div>
                     </div>
                     <div class="span8">
@@ -108,14 +249,14 @@ tbody tr {
                                         <li class="dropdown">
                                             <a href="#">Property <i class="icon-angle-down"></i></a>
                                             <ul class="dropdown-menu">
-                                                <li class="dropdown"><a >Master Property<i class="icon-angle-right"> </i></a>
+                                                <li class="dropdown"><a >Master Property <i class="icon-angle-right"> </i></a>
                                                     <ul class="dropdown-menu sub-menu-level1">
                                                             <li><a href="{% url 'add_master_property' %}">Add Master Property</a></li>
                                                             <li><a href="{% url 'master_property_view' %}">View Master Properties</a></li>
                                                         </ul>
                                                 </li>
                                            
-                                                <li class="dropdown"><a >Property<i class="icon-angle-right"></i></a>
+                                                <li class="dropdown"><a >Property <i class="icon-angle-right"></i></a>
                                                     <ul class="dropdown-menu sub-menu-level1">
                                                             <li><a href="{% url 'add_property' %}">Add Property</a></li>
                                                             <li><a href="{% url 'property_listview' %}">View Properties</a></li>
@@ -133,9 +274,9 @@ tbody tr {
     
                                            
                                         <li class="dropdown">
-                                            <a href="#">Pages <i class="icon-angle-down"></i></a>
+                                            <a href="#">Manage Clones<i class="icon-angle-down"></i></a>
                                             <ul class="dropdown-menu">
-                                                <li><a href="#">About us</a></li>
+                                                <li><a href="{% url 'create_clone' %}">Create Clone</a></li>
                                                 <li><a href="#">FAQ</a></li>
                                                 <li><a href="#">Team</a></li>
                                                 <li><a href="#">Services</a></li>
@@ -143,15 +284,7 @@ tbody tr {
                                                 <li><a href="#">404</a></li>
                                             </ul>
                                         </li>
-                                        <li class="dropdown">
-                                            <a href="#">Portfolio <i class="icon-angle-down"></i></a>
-                                            <ul class="dropdown-menu">
-                                                <li><a href="portfolio-2cols.html">Portfolio 2 columns</a></li>
-                                                <li><a href="portfolio-3cols.html">Portfolio 3 columns</a></li>
-                                                <li><a href="portfolio-4cols.html">Portfolio 4 columns</a></li>
-                                                <li><a href="portfolio-detail.html">Portfolio detail</a></li>
-                                            </ul>
-                                        </li>
+                                        
                                         <li class="dropdown">
                                             <a href="#">Blog <i class="icon-angle-down"></i></a>
                                             <ul class="dropdown-menu">
@@ -190,7 +323,6 @@ tbody tr {
         </header>
         <!-- end header -->
 {% block bodyblock %}
-      admin hu
 {% endblock %}
         <footer>
             <div class="container">
@@ -253,9 +385,10 @@ tbody tr {
     <script src="{% static 'js/jquery.flexslider.js' %}"></script>
     <script src="{% static 'js/animate.js' %}"></script>
     <script src="{% static 'js/inview.js' %}"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
     <!-- Template Custom JavaScript File -->
     <script src="{% static 'js/custom.js' %}"></script>
+    <script src="{% static 'js/notify.js' %}"></script>
 
 
     </body>

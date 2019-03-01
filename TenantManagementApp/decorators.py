@@ -6,7 +6,7 @@ from django.shortcuts import render
 def for_admin(function):
     def wrap(request, *args, **kwargs):
         if request.user.is_authenticated and request.user.is_superuser:
-           print("User is admin ")
+           print("\nUser is admin \n")
            return function(request, *args, **kwargs)
         else:
             print("\n\n\n\nInavlid user\n\n\n\n")
@@ -16,7 +16,7 @@ def for_admin(function):
 def for_staff(function):
     def wrap(request, *args, **kwargs):
         if request.user.is_authenticated and request.user.is_staff:
-           print("User is admin ")
+           print("\nUser is agent\n ")
            return function(request, *args, **kwargs)
         else:
             print("\n\n\n\nInavlid user\n\n\n\n")
