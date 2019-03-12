@@ -44,7 +44,7 @@
                     <select name='selectedpr' style='width:75%' required>
                         <option value="">Select Property</option>
                         {% for p in plist %}
-                        <option value={{p.property_id}}>{{ p.pr_address }} {{ p.msp_name }} {{ p.msp_address }}</option>
+                        <option value={{p.id}}>{{ p.pr_address }} {{ p.pr_master.cln_master.msp_name }} {{ p.pr_master.cln_master.msp_address }}</option>
                         {% endfor %}
                     </select><br/><br/>
                     {% else %}

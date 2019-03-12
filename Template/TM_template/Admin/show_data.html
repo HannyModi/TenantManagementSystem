@@ -81,7 +81,7 @@
                                         <th>Rent</th>
                                         <th>Description</th>
                                         <th>Edit</th>
-                                        <th>Sold Out</th>
+                                        {% comment %} <th>Put in Maintanance</th> {% endcomment %}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -94,7 +94,7 @@
                                             <td class="pr_rent">{{ row.pr_rent}} </td>
                                             <td class="pr_description">{{ row.pr_description}} </td>
                                             <td><button class="edit_property btn btn-info btn-rounded btn-small" data-id="{{ row.id }}" >Edit</button></td>
-                                            <td>{% if row.pr_is_active == True %}<button class='sold_property btn-danger btn btn-rounded btn-small' data-id="{{ row.id }}">Sold Out</button>{% endif %}</td>
+                                            {% comment %} <td>{% if row.pr_is_active == True %}<button class='sold_property btn-danger btn btn-rounded btn-small' data-id="{{ row.id }}">Maintain</button>{% endif %}</td> {% endcomment %}
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -119,6 +119,7 @@
                                 <tbody>
                                     {% for row in rows %}
                                         <tr>
+                                      
                                             <td>{{ row.pa_property.pr_address}} </td>
                                             <td>{{ row.pa_property.pr_master.cln_alias }}</td>
                                             <td>{{ row.pa_property.pr_deposite}} </td>

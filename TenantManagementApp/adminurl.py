@@ -33,4 +33,21 @@ urlpatterns = [
    # Deleting Master Properties
     path('delete_master_property/', views.delete_master_property,
          name='admin_delete_master_property'),
+     
+    # managing clones
+    path('manage_clones/', views.manage_clones,
+         name='admin_manage_clones'),
+
+    # Showing properties of selected clone
+    path('show_properties/', views.show_properties,
+         name='admin_show_properties'),
+
+    # Showing Clone list of selected Master property
+    path('move_to_clone_list/', views.move_to_clone_list,
+         name='admin_move_to_clone_list'),
+
+    # Showing Clone list of selected Master property 
+    # excluding the selected clone
+    path('move_from_clone_list/', views.move_from_clone_list,
+         name='admin_move_from_clone_list'),
 ]

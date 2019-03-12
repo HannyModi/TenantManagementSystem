@@ -289,7 +289,7 @@ a:focus {
 .navbar-static-top .container,
 .navbar-fixed-top .container,
 .navbar-fixed-bottom .container {
-  width: 940px;
+  width: 1000px;
 }
 
 .span12 {
@@ -317,7 +317,7 @@ a:focus {
 }
 
 .span6 {
-  width: 460px;
+  width: 500px;
 }
 
 .span5 {
@@ -2834,10 +2834,12 @@ table th[class*="span"],
 
 .icon-circle-arrow-right {
   background-position: -240px -144px;
+  vertical-align: middle;
 }
 
 .icon-circle-arrow-left {
   background-position: -264px -144px;
+  vertical-align: middle;
 }
 
 .icon-circle-arrow-up {

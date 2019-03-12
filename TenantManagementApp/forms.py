@@ -19,15 +19,14 @@ class DateInput(forms.DateInput):
 class TenantRegistratonForm(ModelForm):
     class Meta:
         model = TblTenant
-        exclude = ('tn_agent','tn_is_active','tn_joining_date')
+        exclude = ('tn_agent','tn_is_active','tn_status','tn_joining_date')
         
-    tn_name = forms.CharField(
-        max_length=25, help_text="Enter Tenant's Name:", required=True)
+    tn_name = forms.CharField( help_text="Tenant's Name", max_length=25,required=False)
     tn_contact = forms.CharField(
         max_length=10, help_text="Enter Tenant's Contact No:", required=True)
     tn_permanent_address = forms.CharField(widget=forms.Textarea(attrs={'width':"100%", 'cols' : "80", 'rows': "2", }), max_length=225, help_text="Tenant's Permenent address:")
     tn_profile = forms.ImageField(
-        help_text='Upload Tenant\'s Picture here:', max_length=200, required=False)
+        help_text='Upload Tenant\'s Picture here:', max_length=200, required=True)
     tn_document_description = forms.IntegerField(
         help_text='Document Type:', widget=forms.Select(choices=Doc_Choice))
 
@@ -35,8 +34,7 @@ class TenantRegistratonForm(ModelForm):
     tn_reference_name = forms.CharField(
         help_text='Reference Name:', max_length=25, required=True)
     tn_reference_address = forms.CharField(widget=forms.Textarea(attrs={'width':"100%", 'cols' : "80", 'rows': "2", }),help_text='Reference Address:', max_length=255)
-    tn_status = forms.IntegerField(
-        help_text='Tenant Status:', widget=forms.Select(choices=Status))
+   
     tn_agent = forms.CharField(widget=forms.HiddenInput(), required=False)
     # tn_joining_date = forms.DateField(widget=forms.SelectDateWidget(),help_text="Select Joinning Date:",input_formats='%d/%m/%Y')        
     # tn_joining_date = forms.DateField(help_text='Date of Join:')

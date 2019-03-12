@@ -248,17 +248,17 @@ class TblPropertyAllocation(models.Model):
     pa_tenant = models.ForeignKey(TblTenant,
                                   on_delete=models.CASCADE)
     # Starting date of agreement
-    pa_agreement_date = models.DateField(null=False)
+    pa_agreement_date = models.DateField(null=True)
     # Ending date of Agreement
-    pa_agreement_end_date = models.DateField(null=False)
+    pa_agreement_end_date = models.DateField(null=True)
     # Copy of acceptance latter
-    pa_acceptance_latter = models.ImageField(
-        upload_to='rent/acceptance_latter')
+    pa_acceptance_letter = models.ImageField(
+        upload_to='rent/acceptance_letter',null=True)
     # Copy of Agreement
     pa_tenancy_agreement = models.ImageField(
-        upload_to='rent/tenancy/agreement')
+        upload_to='rent/tenancy/agreement',null=True)
     # Final rent after bargaining
-    pa_final_rent = models.FloatField(max_length=10)
+    pa_final_rent = models.FloatField(max_length=10,null=True)
     # showing the current allocation status.
     # true for alloted ,false for previous allocation
     pa_is_allocated = models.BooleanField(default=True)
