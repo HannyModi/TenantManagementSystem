@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from TenantManagementApp.decorators import *
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.db import *
-from django.db.models import Prefetch
+from django.db.models import Prefetch,Q
 from datetime import datetime
 # Create your views here.
 # redirects to index page
@@ -97,7 +97,7 @@ def agent_request_reject(request):
     id = request.POST['aid']
     agent = TblAgent.objects.filter(id=id).delete()
     # agent.verified_save()
-    # print("\n\n\n\n\n", agent)
+    print("\n\n\n\n\n", agent)
     return view_agent_request(request)
 
 # Viewing the agent request in more detailed View
@@ -229,7 +229,7 @@ def edit_property(request):
         pr.save()
         return HttpResponse("1")
     except Exception as e:
-        # print("error ", e)
+        print("error ", e)
         return HttpResponse("0")
 
 # showing data on admin page
@@ -355,7 +355,7 @@ def delete_master_property(request):
         msp.delete()
         return HttpResponse("1")
     except Exception as e:
-        # print('Error at Master property delete', e)
+        print('Error at Master property delete', e)
         return HttpResponse("0")
 
 
@@ -366,7 +366,7 @@ def view_approved_agent(request):
             is_staff=True, is_superuser=False).order_by('first_name', 'last_name')
     except Exception as e:
         agents = None
-        # print('----> Error :', e)
+        print('----> Error :', e)
     # if agents:
     #     for agent in agents:
     #         # print(agent)
@@ -449,7 +449,7 @@ def allocate_msp(request):
             obj[0].save()
             return HttpResponseRedirect(reverse(master_property_view))
         except Exception as e:
-            # print('Error ', e)
+            print('Error ', e)
             return HttpResponseRedirect(reverse(master_property_view))
     else:
         HttpResponse("Error")
@@ -700,7 +700,7 @@ def move_to_clone_list(request):
         cln_master=request.GET['msp']).order_by('id')
     response = """move in clone:
                 <select name="to_clone" class="form-data"
-                 id="to_clone" style="width:50%" placeholder="new hint">
+                 id="to_clone" style="width:50%;" placeholder="new hint">
                  <option value=""  selected="selected">
                  Select Clone</option>
                 """
@@ -719,7 +719,7 @@ def move_from_clone_list(request):
         .exclude(id=request.GET['cln']).order_by('id')
     response = """move from clone:
                 <select name="from_clone" class="form-data"
-                 id="from_clone" style="width:50%" placeholder="new hint">
+                 id="from_clone" style="width:50%;" placeholder="new hint">
                  <option value="" selected="selected">
                  Select Clone</option>
                 """
@@ -882,19 +882,20 @@ def activation_change_tenant(request):
             print("\n\n",tenant)
             if request.GET['change'] == 'activate':
                 print("Activated")
-            #     tenant.tn_is_active = True
-            #     tenant.save()
+                tenant.tn_is_active = True
+                tenant.save()
             else:
                 print("Deactivated")
-            #     tenant.tn_is_active = False
-            #     tenant.tn_status = 0
-            #     tenant.save()          
-            #     pAllocation = TblPropertyAllocation.objects.get(
-            #         pa_tenant=tenant, pa_is_allocated=True)
-            #     pAllocation.pa_property.pr_is_allocated = False
-            #     pAllocation.pa_property.save()
-            #     pAllocation.pa_is_allocated=False
-            #     pAllocation.save() 
+                if tenant.tn_status == 2 or tenant.tn_status == 3:         
+                    pAllocation = TblPropertyAllocation.objects.get(
+                        pa_tenant=tenant, pa_is_allocated=True)
+                    pAllocation.pa_property.pr_is_allocated = False
+                    pAllocation.pa_property.save()
+                    pAllocation.pa_is_allocated=False
+                    pAllocation.save() 
+                tenant.tn_is_active = False
+                tenant.tn_status = 0
+                tenant.save() 
             return HttpResponse("Done") 
         else:
             return HttpResponse("Error")     
@@ -956,7 +957,7 @@ def get_Tenant_list(request):
         # print(request.GET['pid'])
         # print(pobj.pr_address, pobj.msp_name, pobj.msp_address)
         Tenant_list = TblTenant.objects.filter(
-            tn_is_active=True, tn_agent_id=request.user, tn_status=1)
+            Q(tn_is_active=True) & Q(tn_agent_id=request.user) & Q(tn_status = 1) | Q(tn_status = 0 ))
         # print(Tenant_list)
         context = {'pobj': pobj,
                    'Tenant_list': Tenant_list, 'page': "pdetails"}
@@ -993,9 +994,9 @@ def allocate_property(request):
         # # print(p)
         # # print(type(p))
         objp = TblProperty.objects.get(id=request.POST['pselect'])
-        # print(objp)
+        print(objp)
         tobj = TblTenant.objects.get(id=request.POST['tselect'])
-        # print(tobj)
+        print(tobj)
         try:
             allocation = TblPropertyAllocation.objects.create(pa_property=objp, pa_tenant=tobj, pa_agreement_date=request.POST['start_agreement_date'], pa_agreement_end_date=request.POST[
                 'end_agreement_date'], pa_acceptance_letter=request.FILES['pa_agreement_letter'], pa_tenancy_agreement=request.FILES['tenancy_agreement'], pa_final_rent=request.POST['final_rent'], pa_is_allocated=True)
@@ -1033,7 +1034,7 @@ def deallocate_property(request):
         except Exception as e:
             print("Error ", e)
     if 'property' in request.GET.keys():
-        try:
+        
             pid = request.GET['property']
             print("\n\n", pid, "\n\n")
             pobj = TblProperty.objects.get(id=pid)
@@ -1042,14 +1043,14 @@ def deallocate_property(request):
             pAllocation = TblPropertyAllocation.objects.get(
                 pa_property=pobj, pa_is_allocated=True)
             print(type(pAllocation))
+            print(pAllocation)
             pAllocation.pa_tenant.tn_status=0
             pAllocation.pa_tenant.save()
             pAllocation.pa_is_allocated=False
             pAllocation.pa_agreement_end_date=datetime.now()
             pAllocation.save()
             return HttpResponse("1")
-        except Exception as e:
-            print("Error ", e)
+        
     return HttpResponse("0")
 
 

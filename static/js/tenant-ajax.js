@@ -139,12 +139,23 @@ $('.decimal_input').keyup(function () {
 
 // Searching in Agent request on search textbox
 $('.search_tenant').live('keyup',function () {
-    var status=$(this).attr('data-status');  
+    var status=$(this).attr('data-status'); 
+    // console.log(status) 
     var query;
     query = $(this).val();
     $.get('/Agent/tenant_search_list/', { suggestion: query,status: status }, function (data) {
-        console.log(data);
-        $('#tbl_active_tenants').html(data);       
+        // console.log(data);
+        // console.log(status)
+        if(status == "all"){
+            $('#tbl_tenants').html(data);   
+        }
+        if (status == "active") {
+            $('#tbl_active_tenants').html(data);   
+        } 
+        if (status == "inactive") {
+            $('#tbl_inactive_tenants').html(data);   
+        }
+           
     });
 });
 
