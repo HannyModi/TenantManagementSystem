@@ -1,25 +1,44 @@
 // Function to handle the agents status on the click of agent-act button.
-$('.agent-act').click(function () {
+$('.agent-act').live("click", function () {
     var ag_id;
     var act;
     ag_id = $(this).attr("data-id");
     act = $(this).attr("data-act");
-    $.get('/Admin/agent_action/', { id: ag_id, is_active: act }, function (data) {
-    });
+    var view = $(this).attr('data-view')
+    var msg;
     if (act == "0") {
-        $("#td" + ag_id).html("Retired")
-        $(this).attr("data-act", "1");
-        $(this).val("Activate");
-        $(this).removeClass("btn-danger").addClass("btn-success");
+        msg = "Are you sure to retire this Agent?"
     }
     else {
-        $("#td" + ag_id).html("Active")
-        $(this).attr("data-act", "0");
-        $(this).val("Retire");
-        $(this).removeClass("btn-success").addClass("btn-danger");
+        msg = "Are you sure to Activate this Agent?"
+    }
+    if (window.confirm(msg)) {
+        $.get('/admin/agent_action/', { id: ag_id, is_active: act }, function (data) {
+            if (view == 'view') {
+                location.href = '/admin/agent_requests/agent_profile/?id=' + ag_id;
+            }
+
+        });
+        if (view != 'view') {
+            if (act == "0") {
+                $("#td" + ag_id).html("Retired")
+                $(this).attr("data-act", "1");
+                $(this).val("Activate");
+                $(this).removeClass("btn-danger").addClass("btn-success");
+                $(this).parent().siblings('.allocation').html('');
+            }
+            else {
+                $("#td" + ag_id).html("Active")
+                $(this).attr("data-act", "0");
+                $(this).val("Retire");
+                $(this).removeClass("btn-success").addClass("btn-danger");
+                $(this).parent().siblings('.allocation').html('<input type="button"' +
+                    ' class="agent-allocate btn-success btn-rounded"' +
+                    ' data-id="' + ag_id + '" value="Allocate">');
+            }
+        }
     }
 });
-
 // Allocating property to agent if he is active
 $('.agent-allocate').live("click", function () {
     var ag_id = $(this).attr("data-id");
@@ -138,26 +157,30 @@ $('.decimal_input').keyup(function () {
 
 
 // Searching in Agent request on search textbox
-$('.search_tenant').live('keyup',function () {
-    var status=$(this).attr('data-status'); 
-    // console.log(status) 
+$('.search_tenant').live('keyup', function () {
+    var status = $(this).attr('data-status');
     var query;
     query = $(this).val();
-    $.get('/Agent/tenant_search_list/', { suggestion: query,status: status }, function (data) {
-        // console.log(data);
-        // console.log(status)
-        if(status == "all"){
-            $('#tbl_tenants').html(data);   
+    $.get('/Agent/tenant_search_list/', { suggestion: query, status: status }, function (data) {
+        if (status == "all") {
+            $('#tbl_tenants').html(data);
         }
         if (status == "active") {
-            $('#tbl_active_tenants').html(data);   
-        } 
-        if (status == "inactive") {
-            $('#tbl_inactive_tenants').html(data);   
+            $('#tbl_active_tenants').html(data);
         }
-           
+        if (status == "inactive") {
+            $('#tbl_inactive_tenants').html(data);
+        }
     });
 });
+
+$('.propertyradio').live('click', function () {
+    var propertytype = $(this).attr('data-value');
+    $.get('/Agent/Agent_Properties/', { propertytype: propertytype }, function (data) {
+        $('#propertylist').html(data);
+    })
+});
+
 
 
 $('.pimg').live('click', function () {
@@ -224,7 +247,7 @@ $(document).ready(function () {
     }
 });
 
-$(".allocate_tenant").click(function () {
+$(".allocate_tenant").live('click', function () {
     if ($(this).attr('data-pid')) {
         pid = $(this).attr('data-pid');
         location.href = '/Agent/get_Tenant_list/?pid=' + pid + '&page=' + 'pdetails';
@@ -235,7 +258,7 @@ $(".allocate_tenant").click(function () {
     }
 });
 
-$('.deallocate_tenant').click(function () {
+$('.deallocate_tenant').live('click', function () {
     if ($(this).attr('data-tid')) {
         tid = $(this).attr('data-tid');
         $.get('/Agent/deallocate_property/', { tenant: tid }, function (data) {
@@ -244,8 +267,8 @@ $('.deallocate_tenant').click(function () {
                 localStorage.setItem("Status", status);
                 location.reload('/Agent/ViewTenants/');
             }
-            else{
-                $.notify("Error occured while Deallocation","error")
+            else {
+                $.notify("Error occured while Deallocation", "error")
 
             }
         });
@@ -258,9 +281,9 @@ $('.deallocate_tenant').click(function () {
                 localStorage.setItem("Status", status);
                 location.reload('/Agent/Agent_Properties/');
             }
-            else{
-                
-                $.notify("Error occured while Deallocation","error")
+            else {
+
+                $.notify("Error occured while Deallocation", "error")
 
             }
 
@@ -273,47 +296,50 @@ $(function () {
     $("select").select2();
 });
 
+
+
+
 //Make class visible for old tenants in insert tenant view
-$('#old_tenant').click(function(){
+$('#old_tenant').click(function () {
     var response;
-    $.get('/Agent/get_deactivated_tenant/',function(data){
-         
-        if (data != 0){
-            console.log(data);     
-      response = '<select id="selected_tenant" style="width:100%;" name="tn_id">'+
-      '<option value="" selected>Select Tenant to make him active.</option>';
-      $.each(data,function(item,value){
-          $.each(value,function(i,v){
-        console.log("Id = "+v.id)
-        console.log("Name = "+v.tn_name)
-        response+='<option value='+v.id+'>'+v.tn_name+'</option>';
-          });
-        });
-        response+='</select>';
-      }
-      else{
-          response='<strong id="selected_tenant">No Deactiavted tenant Found.</strong>'
-      }
-      console.log(response)
-      $('#id_tn_name').replaceWith(response);
-      $('#selected_tenant').select2();
+    $.get('/Agent/get_deactivated_tenant/', function (data) {
+
+        if (data != 0) {
+            console.log(data);
+            response = '<select id="selected_tenant" style="width:100%;" name="tn_id">' +
+                '<option value="" selected>Select Tenant to make him active.</option>';
+            $.each(data, function (item, value) {
+                $.each(value, function (i, v) {
+                    console.log("Id = " + v.id)
+                    console.log("Name = " + v.tn_name)
+                    response += '<option value=' + v.id + '>' + v.tn_name + '</option>';
+                });
+            });
+            response += '</select>';
+        }
+        else {
+            response = '<strong id="selected_tenant">No Deactiavted tenant Found.</strong>'
+        }
+        console.log(response)
+        $('#id_tn_name').replaceWith(response);
+        $('#selected_tenant').select2();
     });
-   
+
     // $('#id_tn_name').insertAfter(response);
     $('#id_tn_name').addClass('hidden');
     $('#Add_agent_again').removeClass("hidden");
     $('#Add_new_agent').addClass("hidden");
     $('#Add_agent_again').append("<input type='hidden' id='updatehide' name='update' value='update'></input>")
 
-   
+
 });
 
-$('#new_tenant').click(function(){
+$('#new_tenant').click(function () {
     $('#selected_tenant').select2('destroy');
     $('#selected_tenant').replaceWith("<input type='text' name='tn_name' maxlength='25' id='id_tn_name'>");
-   
+
     $('selected_tenant').addClass('hidden');
-    
+
     $('#Add_agent_again').addClass("hidden");
     $('#Add_new_agent').removeClass("hidden");
     $('#id_tn_contact').val("");
@@ -327,34 +353,34 @@ $('#new_tenant').click(function(){
     $('#select2-id_tn_document_description-container').text("Select");
     $('#id_tn_document').attr('required')
     $('#id_tn_profile').attr('required')
-   });
-   
-$('#selected_tenant').live('change',function(){
- tid=$(this).val()
- $.get('/Agent/activate_tenant/',{tid:tid},function(data){
-    $('#id_tn_contact').val(data.tn_contact);
-    $('#id_tn_name').val(data.tn_name);
-    $('#id_tn_permanent_address').text(data.tn_permanent_address);
-    $('#id_tn_reference_name').text(data.tn_reference_name);
-    $('#id_tn_reference_address').val(data.tn_reference_address);
-    $('#id_tn_reference_name').val(data.tn_reference_name);
-    $('#id_tn_document_description').val(data.tn_document_description);
-    $('#select2-id_tn_document_description-container').text($('#id_tn_document_description option:selected').text());  
-    var url='/media/';
-    $('#tenant_profile').attr('src',url+data.tn_profile)
-    $('#tenant_document').attr('src',url +data.tn_document)
-    $('#tenentimage').removeClass('hidden')
-    $('#id_tn_document').removeAttr('required')
-    $('#id_tn_profile').removeAttr('required')
- })
 });
 
-$('#property').change(function(){
-//    alert($(this).val());
-$.get('/Agent/getrent/',{pid:$(this).val()},function(data){
-    $('#rent').html("Rent is " + data);
-    $('#rent').removeClass("hidden"); 
+$('#selected_tenant').live('change', function () {
+    tid = $(this).val()
+    $.get('/Agent/activate_tenant/', { tid: tid }, function (data) {
+        $('#id_tn_contact').val(data.tn_contact);
+        $('#id_tn_name').val(data.tn_name);
+        $('#id_tn_permanent_address').text(data.tn_permanent_address);
+        $('#id_tn_reference_name').text(data.tn_reference_name);
+        $('#id_tn_reference_address').val(data.tn_reference_address);
+        $('#id_tn_reference_name').val(data.tn_reference_name);
+        $('#id_tn_document_description').val(data.tn_document_description);
+        $('#select2-id_tn_document_description-container').text($('#id_tn_document_description option:selected').text());
+        var url = '/media/';
+        $('#tenant_profile').attr('src', url + data.tn_profile)
+        $('#tenant_document').attr('src', url + data.tn_document)
+        $('#tenentimage').removeClass('hidden')
+        $('#id_tn_document').removeAttr('required')
+        $('#id_tn_profile').removeAttr('required')
+    })
 });
+
+$('#property').change(function () {
+    //    alert($(this).val());
+    $.get('/Agent/getrent/', { pid: $(this).val() }, function (data) {
+        $('#rent').html("Rent is " + data);
+        $('#rent').removeClass("hidden");
+    });
 })
 
 
@@ -426,36 +452,22 @@ $('.addvisit').live('click', function () {
 
 });
 
-$(document).ready(function(){
+$(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
     $('#move_to').select2('destroy')
-  });
+});
 
-$('.change_status').live('click',function(){
+$('.change_status').live('click', function () {
     $("#id").val($(this).attr('data-id'));
     $("#tn_name").val($(this).attr('data-tnname'));
     $("#tn_status").val($(this).attr('data-status'));
+    $("#id").attr('data-id', $(this).attr('data-status'));
+    $('#tenant_visit').parent().addClass('hidden')
     $('#select2-tn_status-container').html($(this).html())
     $('#myModal').css('display', 'block');
-
+    $('#tenant_visit_label').remove();
 });
 
-$('#save_tenant_status').live('click',function(){
-    id=$('#id').val()
-    status=$('#tn_status').val()
-    // alert("Id is :"+id+"Status is :"+status);
-    $.get('/Agent/tenant_status_change',{id:id,status:status},function(data){
-        if(data == '1')
-        {
-            status = "Status Changed Successfully";
-            localStorage.setItem("Status", status);
-            location.reload('/Agent/ViewTenants/');
-        }
-        else{
-            $.notify("Error occured while updatinf Tenant Status","error")
-        }
-    });
-});
 
 $('.move_from').live('click', function () {
     // alert($('#move_from option:selected'))
@@ -486,11 +498,11 @@ $('.move_all_to').live('click', function () {
 
 });
 
-function check_existance(){
-    $('#move_to option').each(function(){
-        $('#move_from option[value='+($(this).val())+']').remove();
-    }); 
-      
+function check_existance() {
+    $('#move_to option').each(function () {
+        $('#move_from option[value=' + ($(this).val()) + ']').remove();
+    });
+
 }
 
 
@@ -516,7 +528,7 @@ $("#msp_create_clone").change(function () {
         $("#property").addClass('hidden');
     }
     else {
-        $("#property").removeClass("hidden");       
+        $("#property").removeClass("hidden");
     }
 });
 
@@ -594,10 +606,10 @@ $("#manage_by_property").change(function () {
 
 // Showing Admin clone list while allocating Agent to Property.
 $("#msp_list").change(function () {
-   
+
     if ($(this).val() == "Select item") {
         $("#property").addClass('hidden');
-     
+
     }
     else {
         $("#property").removeClass("hidden");
@@ -615,10 +627,6 @@ $("#msp_list").change(function () {
 
 });
 
-
-
-
-
 // Creating the list of clones.
 $('#clone_no').keyup(function () {
     var no = $(this).val();
@@ -632,65 +640,181 @@ $('#clone_no').keyup(function () {
     }
 });
 
-$('.deactivate').live('click',function(){
-    var id=$(this).attr('data-id')
-    $.get('/Agent/activation_change_tenant/',{id:id,change:'deactivate'},function(data){
-        if(data == "Done")
-        {
-            status="Tenant Dectivated";
+$('.deactivate').live('click', function () {
+    var id = $(this).attr('data-id')
+    $.get('/Agent/activation_change_tenant/', { id: id, change: 'deactivate' }, function (data) {
+        if (data == "Done") {
+            status = "Tenant Dectivated";
             localStorage.setItem("Status", status);
             location.reload('/Agent/ViewTenants/');
         }
         else
-        $.notify('Error occured during deactivation','error');
+            $.notify('Error occured during deactivation', 'error');
     })
 })
 
-$('.activate').live('click',function(){
-    var id=$(this).attr('data-id')
-    $.get('/Agent/activation_change_tenant/',{id:id,change:'activate'},function(data){
-        if(data == 'Done')
-        {
-            status="Tenant Activated";
+$('.activate').live('click', function () {
+    var id = $(this).attr('data-id')
+    $.get('/Agent/activation_change_tenant/', { id: id, change: 'activate' }, function (data) {
+        if (data == 'Done') {
+            status = "Tenant Activated";
             localStorage.setItem("Status", status);
             location.reload('/Agent/ViewTenants/');
         }
         else
-        $.notify('Error occured during deactivation','error');
+            $.notify('Error occured during deactivation', 'error');
     })
 })
 
-// $(document).ready(function(){
-//     $('input[type="date"]').click(function(){
-//         alert(this.value);         //Date in full format alert(new Date(this.value));
-//         var inputDate = new Date(this.value);
-//     });
-// });
-
-function validatedate(){
-var startdate=$('#agreement_start_date').val();
-var enddate=$('#agreement_end_date').val();
-console.log("Satrt Date = "+ $('#agreement_start_date').val());
-console.log("End Date = "+ $('#agreement_end_date').val());
-if(Date.parse(enddate) <= Date.parse(startdate))
-{
-$.notify("End date should be bigger than start date","info")
-return false
-}
-else{
-    return true
-}
+function validatedate() {
+    var startdate = $('#agreement_start_date').val();
+    var enddate = $('#agreement_end_date').val();
+    console.log("Satrt Date = " + $('#agreement_start_date').val());
+    console.log("End Date = " + $('#agreement_end_date').val());
+    if (Date.parse(enddate) <= Date.parse(startdate)) {
+        $.notify("End date should be bigger than start date", "info")
+        return false
+    }
+    else {
+        return true
+    }
 };
 
 
-// $('#agreement_start_date').change(function() { 
-// var datearray = $('#agreement_start_date').val().split("-");
-// var montharray = ["Jan", "Feb", "Mar","Apr", "May", "Jun","Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
-// var year = "20" + datearray[2];
-// var month = montharray.indexOf(datearray[1])+1;
-// var day = datearray[0];
-// var minDate = (year +"-"+ month +"-"+ day);
-// $('#agreement_end_date').attr('min',minDate); 
-// });
+$('#tn_status').live('change', function () {
 
-    
+    var current_status = $('#id').attr('data-id');
+    $('#tenant_visit_label').remove();
+    var id = $('#id').val()
+    if ($(this).val() == "2") {
+        if (current_status == 3 && confirm('Tenant is already allocated. \ndo you want to renew Agrement?')) {
+
+        } else {
+
+            $.get('/Agent/get_tenant_visit', { id: id }, function (data) {
+                if (data != 0) {
+                    alert("Here i am")
+                    $('#tenant_visit').html(data)
+                    $('#tenant_visit').select2()
+                    $('#tenant_visit').removeClass('hidden')
+                    $('#tenant_rent').removeClass('hidden')
+
+                }
+                else {
+                    try {
+                        $('#tenant_visit').select2('destroy')
+
+                    } catch (error) {
+
+                    }
+                    $('<strong id = "tenant_visit_label">No unallocated visit found for this user.</strong>').insertAfter('#tenant_visit')
+                    $('#tenant_visit').addClass('hidden')
+                    $('#tenant_rent').addClass('hidden')
+                }
+                $('#tenant_visit').parent().removeClass('hidden')
+
+            })
+        }
+    } else {
+        $('#tenant_visit').parent().addClass('hidden')
+    }
+})
+
+$('#save_tenant_status').live('click', function () {
+
+    id = $('#id').val()
+    status = $('#tn_status').val()
+    if (status == '0') {
+        $.get('/Agent/tenant_status_change', { id: id, status: status }, function (data) {
+            if (data == '1') {
+                status = "Tenant updated";
+                localStorage.setItem("Status", status);
+                location.reload();
+                $.notify("Tenant updated", "success")
+            }
+            else {
+                $.notify("Error occured while updating Tenant Status", "error")
+            }
+        });
+    }
+    else if (status == 1) {
+        location.href = '/Agent/add_visit/?tid=' + id;
+    }
+    else if (status == 2) {
+
+        var current_status = $('#id').attr('data-id');
+        if ($('#tenant_visit_label').length) {
+            console.log('now i will ask for adding new visit for this tenant')
+            if (confirm('No unallocated visit found.\nDo you want to record a new visit?')) {
+                location.href = '/Agent/add_visit/?tid=' + id;
+            }
+
+        }
+        else if (current_status == 3 && ($('#tenant_visit').hasClass('hidden') || $('#tenant_visit').parent().hasClass('hidden'))) {
+            console.log('now i ll create new allocation for this tenant on same allocated property')
+            $.get('/Agent/tenant_status_change', { id: id, status: status, update: true, }, function (data) {
+                if (data == '1') {
+                    status = "Agreement renew process recorded.";
+                    localStorage.setItem("Status", status);
+                    location.reload();
+                    // $.notify("Tenant updated","success")
+                }
+                else {
+                    $.notify("Error occured while updating Tenant Status", "error")
+                }
+            });
+        }
+        else if (current_status != 2) {
+            console.log('now will create new allocation on selected')
+            if ($('#tenant_visit').val() == "") {
+                $.notify('Please select Property to allocate', 'error')
+            } else {
+                $.get('/Agent/tenant_status_change', {
+                    id: id, status: status,
+                    update: false, property: $('#tenant_visit').val(),
+                    rent: $('#rent').val()
+                },
+                    function (data) {
+                        if (data == '1') {
+                            status = "New Agreement process recorded.";
+                            localStorage.setItem("Status", status);
+                            location.reload();
+                            // $.notify("Tenant updated","success")
+                        }
+                        else {
+                            $.notify("Error occured while updating Tenant Status", "error")
+                        }
+                    });
+            }
+        }
+        else {
+            console.log('Status of Tenant is not changed.')
+            $.notify("Status of tenant is not changed.", "info")
+        }
+    }
+    else if (status == 3) {
+        location.href = '/Agent/get_Tenant_list/?tid=' + id + '&page=' + 'tdetails';
+    }
+});
+
+$('.add_rent').live('click', function () {
+    var pid = $(this).attr('data-pid');
+    var tid = $(this).attr('data-tid');
+    if(pid){
+    $.get('/Agent/check_allocation/', { pid: pid },function(data)
+    {
+        if (data == "1"){
+            location.href = '/Agent/add_rent/?pid='+pid;
+        }
+        else{
+            alert("This Propert's Agreement is under Process.");
+        }
+    });
+   
+    };
+    if(tid){
+    // $.get('/Agent/add_rent/', { tid: tid });
+    location.href = '/Agent/add_rent/?tid='+tid;
+
+    };
+})

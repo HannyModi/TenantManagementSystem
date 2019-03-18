@@ -1,7 +1,7 @@
 {% extends 'TM_template/Agent/Base.html' %}
 {% load staticfiles %}
 {% block titleblock %}
-Agent List
+Property List
 {% endblock %}
 {% block bodyblock %}
 <section id="inner-headline">
@@ -30,35 +30,36 @@ Agent List
            {% comment %} action="{% url 'allocate_property' %}" > {% endcomment %}
             {% csrf_token %}
             <input type="hidden" name="page" value="{{ page }}" />
-            {% if pobj %}
-            <input type="hidden" name="pselect" value="{{ pobj.property_id }}" />
-             <label> Address :</label> <input type="text" id="pr_address"
-              value="{{ pobj.pr_address }}, {{ pobj.msp_name }}, {{ pobj.msp_address }}" disabled /></br><br />
-            <label>Rate of Rent : {{pobj.pr_rent}}</label></br>
-            <label>
-            Final Rent :</label>
-            <input type="text" class="decimal_input" name="final_rent"/><br/><br/>
-            {% elif plist %}
-            <label> Property:</label><select style="width:75%;" id="property" required name="pselect">
-              <option value="" selected>Select Property</option>
-              {% for pobj in plist %}
-              <option value={{pobj.property_id}}>{{ pobj.pr_address }}, {{ pobj.msp_name }}, {{ pobj.msp_address }}</option>
-              {% endfor %}
-            </select><br /><br />
-            <label id="rent" class="hidden"></label><br>
-            
-            <label>
-            Final Rent :</label>
-            <input type="text" class="decimal_input" name="final_rent"/><br/><br/>
-
+                {% if pobj %}
+              <input type="hidden" name="pselect" value="{{ pobj.id }}" />
+              <label> Address :</label> <input type="text" id="pr_address"
+                value="{{ pobj.pr_address }} {{ pobj.pr_master.cln_master.msp_name }} {{ pobj.pr_master.cln_master.msp_address }}" disabled /></br><br />
+            {% elif prp %}
+              <input type="hidden" name="pselect" value="{{ prp.id }}" />
+              <label> Property :</label> <input type="text" 
+              value="{{ prp.pa_property.pr_address }}, {{ prp.pa_property.pr_master.cln_master.msp_name }}, {{ prp.pa_property.pr_master.cln_master.msp_address }}" disabled /></br><br />
+            {% elif visitlist %}
+              <label> Property:</label><select style="width:100%;" required name="pselect">
+                <option value="" selected>Select Property</option>
+                {% for p in visitlist %}
+                <option value={{p.vs_property.pk}}>{{ p.vs_property.pr_address }} {{ p.vs_property.pr_master.cln_master.msp_name }} {{ p.vs_property.pr_master.cln_master.msp_address }}</option>
+                {% endfor %}
+              </select><br /><br />
+              {% elif plist %}
+              <label> Property:</label><select style="width:100%;" required name="pselect">
+                <option value="" selected>Select Property</option>
+                {% for p in plist %}
+                <option value={{p.pk}}>{{ p.pr_address }} {{ p.pr_master.cln_master.msp_name }} {{ p.pr_master.cln_master.msp_address }}</option>
+                {% endfor %}
+              </select><br /><br />
             {% else %}
-            <label>
-            You have no property allocated.Contact Admin.</label>
+              <label>
+              This tenant don't have any unallocated visited proeprty for selected tenant</label>
             {% endif %}
 
             {% if Tenant_list %}
             <label>
-            Select Tenant:</label><select style="width:75%;" name="tselect">
+            Select Tenant:</label><select style="width:100%;" name="tselect">
               <option value="" selected>Select Tenant</option>
               {% for tenant in Tenant_list %}
               <option value={{tenant.id}}>{{tenant.tn_name}}</option>
@@ -74,10 +75,24 @@ Agent List
             You have no tenants to allocate property. Either all tenants are allocated or you have not registered any.</label>
             {% endif %}
             <label>
-            Start Date of agreement :</label><input type="date" id="agreement_start_date" name='start_agreement_date'/>
+            Start Date of agreement :</label><input type="date" style="width:100%;" id="agreement_start_date" name='start_agreement_date'/>
             <br/><br/>
             <label>
-            End Date of agreement :</label><input type="date" id='agreement_end_date' name='end_agreement_date'/>
+            End Date of agreement :</label><input type="date" style="width:100%;" data-toggle="tooltip" title="End date should be atleast 2 months bigger than Start Date" id='agreement_end_date' name='end_agreement_date'/>
+              <script>
+                var today = new Date();
+                var dd = today.getDate();
+                var mm = today.getMonth()+1; //January is 0!
+                var yyyy = today.getFullYear();
+                if(dd<10){
+                        dd='0'+dd
+                    } 
+                    if(mm<10){
+                        mm='0'+mm
+                    } 
+                mindate = yyyy+'-'+mm+'-'+dd;
+                document.getElementById("agreement_end_date").setAttribute("min", mindate);
+              </script>
             <br/><br/>
             <label>
             Property Acceptance Letter :</label>
@@ -87,6 +102,12 @@ Agent List
             Tanancy Agreement :</label>
             <input type="file" placeholder="Uplode Image" accept="image/gif, image/jpeg, image/png"  name='tenancy_agreement'/>
             <br/><br/>
+            Final Rent :</label>{% if prp %}
+            <input type="text" class="decimal_input" name="final_rent" value="{{prp.pa_final_rent}}" disabled /><br/><br/>
+            {% else %}
+            <input type="text" class="decimal_input" name="final_rent"/><br/><br/>
+
+            {% endif %}
   
             <button type="submit" class="btn btn-rounded btn-theme" id="allocatebtn" >Allocate</button>
           </form>

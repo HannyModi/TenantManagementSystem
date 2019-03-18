@@ -8,12 +8,14 @@ from django.contrib.auth import authenticate, login, logout
 from TenantManagementApp.decorators import *
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.db import *
-from django.db.models import Prefetch,Q
-from datetime import datetime
+from django.db.models import Prefetch, Q, Count
+from datetime import datetime,timedelta
+from dateutil import relativedelta
+from threading import *
 # Create your views here.
+
+
 # redirects to index page
-
-
 def index(request):
     if request.method == 'GET':
         if request.user.is_authenticated:
@@ -21,8 +23,6 @@ def index(request):
     return render(request, 'TM_template/index.html')
 
 # Agent sends request to admin for his account in this wesite
-
-
 def addAgent(request):
     ag_form = AgentForm()
     if request.method == 'POST':
@@ -42,8 +42,6 @@ def addAgent(request):
     return render(request, 'TM_template/AgentRegistration.html', {'ag_form': ag_form})
 
 # custom login for admin/agent
-
-
 def do_login(request):
     username = request.POST['username']
     password = request.POST['password']
@@ -79,8 +77,6 @@ def view_agent_request(request):
     return render(request, 'TM_template/Admin/agent_requests.html', {'agents': agents})
 
 # accepting the agent request
-
-
 @for_admin
 def agent_request_accept(request):
     id = request.POST['id']
@@ -90,8 +86,6 @@ def agent_request_accept(request):
     return view_agent_request(request)
 
 # deleting the agent request
-
-
 @for_admin
 def agent_request_reject(request):
     id = request.POST['aid']
@@ -112,8 +106,6 @@ def agent_profile(request):
     return render(request, 'TM_template/Admin/agent_profile.html', {'agent': agent})
 
 # Adding a new master property
-
-
 @for_admin
 def add_master_property(request):
     # if request.method == "POST":
@@ -278,18 +270,18 @@ def show_data(request):
             # for d in data:
             # print(d.pr_master.cln_alias, d.pr_address)
         elif act == 'allocated_properties':
-          
+
             data = TblPropertyAllocation.objects.select_related(
                 'pa_tenant').select_related(
                     'pa_property').filter(
-                        pa_property__pr_master__cln_master=id,pa_is_allocated=True
+                        pa_property__pr_master__cln_master=id, pa_is_allocated=True
             ).order_by(
                 '-pa_property__pr_master__cln_is_master_clone',
                 'pa_property__pr_master__cln_alias',
                 'pa_property__pr_address')
             for d in data:
                 print(d.pa_property.pr_master.cln_alias,
-                d.pa_property.pr_address, d.pa_tenant.tn_name)
+                      d.pa_property.pr_address, d.pa_tenant.tn_name)
             # data = TblAgentAllocation.objects.select_related(
             #     'al_agent').select_related('al_master'
             #                                ).filter(al_master__cln_master=id)
@@ -395,7 +387,34 @@ def agent_request_retire(request):
 
 
 def master_property_view(request):
-    master_property_list = ViewMasterProperties.objects.all()
+    master_property_list =  TblMasterProperty.objects.all()\
+        .annotate(
+            no_of_clones=Count('tblmasterpropertyclone',
+            distinct=True))\
+        .annotate(
+            unallocated_clones=Count(
+                'tblmasterpropertyclone',distinct=True,
+                filter=Q(
+                    tblmasterpropertyclone__cln_is_allocated=False)))\
+        .annotate(
+            allocated_clones=Count(
+                'tblmasterpropertyclone',distinct=True,
+                filter=Q(
+                    tblmasterpropertyclone__cln_is_allocated=True)))\
+        .annotate(
+            no_of_property=Count(
+                'tblmasterpropertyclone__tblproperty'))\
+        .annotate(
+            unallocated_properties=Count(
+                'tblmasterpropertyclone__tblproperty',
+                filter=Q(
+                    tblmasterpropertyclone__tblproperty__pr_is_allocated=False)))\
+        .annotate(
+            allocated_properties=Count(
+                'tblmasterpropertyclone__tblproperty',
+                filter=Q(
+                    tblmasterpropertyclone__tblproperty__pr_is_allocated=True)))
+    
     return render(request, 'TM_template/Admin/master_property_view.html', {'master_property_list': master_property_list})
 
 # Allocating Agent
@@ -468,18 +487,18 @@ def master_property_soldout(request, msp_id):
     return HttpResponseRedirect(reverse(master_property_view))
 
 
-def property_listview(request):
-    try:
-        property_list = property_view.objects.all().order_by('pr_address', 'msp_address')
-        # for p in property_list:
-        #     # print(p.pr_address)
-        # # .values('cln_alias')
-        # # # print(property_list.count())
-        # # # print(property_list)
-    except Exception as e:
-        property_list = None
-        print('----> Error :', e)
-    return render(request, 'TM_template/Admin/property_view.html', {'property_list': property_list, })
+# def property_listview(request):
+#     try:
+#         property_list = property_view.objects.all().order_by('pr_address', 'msp_address')
+#         # for p in property_list:
+#         #     # print(p.pr_address)
+#         # # .values('cln_alias')
+#         # # # print(property_list.count())
+#         # # # print(property_list)
+#     except Exception as e:
+#         property_list = None
+#         print('----> Error :', e)
+#     return render(request, 'TM_template/Admin/property_view.html', {'property_list': property_list, })
 
 
 def property_soldout(request):
@@ -489,13 +508,12 @@ def property_soldout(request):
         obj_pr.pr_is_allocated = False
         obj_pr.save()
         pAllocation = TblPropertyAllocation.objects.get(
-                pa_property=obj_pr, pa_is_allocated=True)
+            pa_property=obj_pr, pa_is_allocated=True)
         print(type(pAllocation))
-        pAllocation.pa_tenant.tn_status=0
+        pAllocation.pa_tenant.tn_status = 0
         pAllocation.pa_tenant.save()
-        pAllocation.pa_is_allocated=False
+        pAllocation.pa_is_allocated = False
         pAllocation.save()
-      
 
     except Exception as e:
         print("Error: ", e)
@@ -730,7 +748,6 @@ def move_from_clone_list(request):
     return HttpResponse(response)
 
 
-
 # ------------------------------------------------
 # Agent Methods
 # ------------------------------------------------
@@ -747,7 +764,7 @@ def view_tenants(request):
                 queryset=TblProperty.objects.filter(pr_is_allocated=True),
                 to_attr='property'
             )
-    )
+        )
     # data = TblTenant.objects.filter(tn_agent=request.user)\
     #     .select_related('kya likhu')
     #     .prefetch_related(
@@ -758,29 +775,29 @@ def view_tenants(request):
     #         )
     # )
     for d in data:
-        print(d.pa_tenant.tn_name,"\t",d.property.pr_address)
+        print(d.pa_tenant.tn_name, "\t", d.property.pr_address)
     return render(request, 'TM_template/Agent/view_tenant.html', {'tenantlist': tenantlist})
 
 
 @for_staff
 def addTenant(request):
-    form = TenantRegistratonForm()      
+    form = TenantRegistratonForm()
     if request.method == 'POST':
         for k in request.POST.keys():
-                print(k,"\t",request.POST[k])
+            print(k, "\t", request.POST[k])
         if 'update' in request.POST.keys():
-            tenant=TblTenant.objects.get(id=request.POST['tn_id'])
-            tenant.tn_contact=request.POST['tn_contact']
-            tenant.tn_permanent_address=request.POST['tn_permanent_address']
-            tenant.tn_is_active=True
-            tenant.tn_document_description=request.POST['tn_document_description']
-            tenant.tn_reference_name=request.POST['tn_reference_name']
-            tenant.tn_reference_address=request.POST['tn_reference_address']
-            if 'tn_profile' in request.FILES.keys() :
-                tenant.tn_profile=request.FILES['tn_profile']
+            tenant = TblTenant.objects.get(id=request.POST['tn_id'])
+            tenant.tn_contact = request.POST['tn_contact']
+            tenant.tn_permanent_address = request.POST['tn_permanent_address']
+            tenant.tn_is_active = True
+            tenant.tn_document_description = request.POST['tn_document_description']
+            tenant.tn_reference_name = request.POST['tn_reference_name']
+            tenant.tn_reference_address = request.POST['tn_reference_address']
+            if 'tn_profile' in request.FILES.keys():
+                tenant.tn_profile = request.FILES['tn_profile']
                 # print("Data hai:",request.FILES['tn_profile'])
             if 'tn_document' in request.FILES.keys():
-                tenant.tn_document=request.FILES['tn_document']
+                tenant.tn_document = request.FILES['tn_document']
                 # print("\n\nIsme bhi hai data",request.FILES['tn_document'])
             tenant.save()
             return HttpResponseRedirect(reverse(view_tenants))
@@ -791,15 +808,15 @@ def addTenant(request):
                     tenant = form.save(commit=False)
                     tenant.tn_agent = request.user
                     tenant.tn_joining_date = request.POST.get('date_joined')
-                    tenant.tn_name=request.POST['tn_name']
-                    print("\n\n",request.POST['tn_name'])
+                    tenant.tn_name = request.POST['tn_name']
+                    print("\n\n", request.POST['tn_name'])
                     tenant.tn_is_active = True
                     tenant.save()
                     print(tenant)
                     plist = TblProperty.objects\
-                            .select_related('pr_master')\
-                            .select_related('pr_master__cln_master')\
-                            .filter(pr_is_active=True,pr_is_allocated=False,
+                        .select_related('pr_master')\
+                        .select_related('pr_master__cln_master')\
+                        .filter(pr_is_active=True, pr_is_allocated=False,
                                 pr_master__in=TblAgentAllocation
                                 .objects.filter(al_agent=request.user).values('al_master'))
                     print(plist.values())
@@ -810,59 +827,111 @@ def addTenant(request):
                     print(form.errors)
             else:
                 print(form.errors)
-  
+
     return render(request, 'TM_template/Agent/add_tenant.html', {'form': form})
+
 
 def invoke_tenant(request):
     if request.method == 'GET':
-        tenant=TblTenant.objects.get(id=request.GET['tid'])
+        tenant = TblTenant.objects.get(id=request.GET['tid'])
         tenant.__dict__.pop('_state')
         return JsonResponse(tenant.__dict__, safe=False)
 
 
-def get_deactivated_tenant(request):  
-    tenantlist=TblTenant.objects.filter(tn_is_active=False,tn_agent=request.user).values('id','tn_name')
+def get_deactivated_tenant(request):
+    tenantlist = TblTenant.objects.filter(
+        tn_is_active=False, tn_agent=request.user).values('id', 'tn_name')
     print(tenantlist)
-    return JsonResponse({'tenantlist':list(tenantlist)})
-
-
+    return JsonResponse({'tenantlist': list(tenantlist)})
 
 
 '''List of properties allocated to a perticular agent by admin'''
 @for_staff
 def allocated_property_list(request):
+    allocated_mpr=[]
+    allocated_pr=[]
+    if 'propertytype' in request.GET.keys():
+        propertytype=request.GET['propertytype']
+        if propertytype == "Allocatedproperty":
+            allocated_mpr = TblMasterProperty.objects.filter(pk__in=TblAgentAllocation.objects.filter(
+            al_agent=request.user,
+            al_master__in=TblProperty.objects.filter(pr_is_allocated=True).order_by('pr_master').distinct('pr_master').values('pr_master'))\
+                .select_related('al_master').values('al_master__cln_master'))
+        # print(allocated_mpr.values())
 
-    allocated_mpr=TblMasterProperty.objects.filter(pk__in=TblAgentAllocation.objects.filter(al_agent=request.user).select_related('al_master').values('al_master__cln_master'))
-    # print(allocated_mpr.values())
-    
+            allocated_pr = TblProperty.objects\
+                .select_related('pr_master')\
+                .select_related('pr_master__cln_master')\
+                .filter(
+                    pr_master__in=TblAgentAllocation
+                    .objects.filter(al_agent=request.user).values('al_master'),pr_is_allocated=True)
+            print(allocated_pr.values())
+           
+        elif propertytype == "Unallocatedproperty":
+            allocated_mpr = TblMasterProperty.objects.filter(pk__in=TblAgentAllocation.objects.filter(
+            al_agent=request.user,
+            al_master__in=TblProperty.objects.filter(pr_is_allocated=False).order_by('pr_master').distinct('pr_master').values('pr_master'))\
+                .select_related('al_master').values('al_master__cln_master'))
+            # print(allocated_mpr.values())
+
+            allocated_pr = TblProperty.objects\
+                .select_related('pr_master')\
+                .select_related('pr_master__cln_master')\
+                .filter(
+                    pr_master__in=TblAgentAllocation
+                    .objects.filter(al_agent=request.user).values('al_master'),pr_is_allocated=False)
+            print(allocated_pr.values())        
+            
+        elif propertytype == "all":
+            allocated_mpr = TblMasterProperty.objects.filter(pk__in=TblAgentAllocation.objects.filter(
+            al_agent=request.user,
+            al_master__in=TblProperty.objects.all().order_by('pr_master').distinct('pr_master').values('pr_master'))\
+                .select_related('al_master').values('al_master__cln_master'))
+        # print(allocated_mpr.values())
+
+            allocated_pr = TblProperty.objects\
+                .select_related('pr_master')\
+                .select_related('pr_master__cln_master')\
+                .filter(
+                    pr_master__in=TblAgentAllocation
+                    .objects.filter(al_agent=request.user).values('al_master'))
+            print(allocated_pr.values())        
+        return render(request,'TM_template/Agent/property.html',{'allocated_pr': allocated_pr, 'allocated_mpr': allocated_mpr,'propertytype':propertytype}) 
+
+    allocated_mpr = TblMasterProperty.objects.filter(pk__in=TblAgentAllocation.objects.filter(
+            al_agent=request.user,
+            al_master__in=TblProperty.objects.all().order_by('pr_master').distinct('pr_master').values('pr_master'))\
+                .select_related('al_master').values('al_master__cln_master'))
+        # print(allocated_mpr.values())
+
     allocated_pr = TblProperty.objects\
-        .select_related('pr_master')\
-        .select_related('pr_master__cln_master')\
-        .filter(
-            pr_master__in=TblAgentAllocation
-            .objects.filter(al_agent=request.user).values('al_master'))
-    # for z in allocated_pr:
-        # print(z.pr_master.cln_master.msp_name + " " + z.pr_master.cln_master.msp_address)
-    return render(request, 'TM_template/Agent/agent_property.html', {'allocated_pr': allocated_pr,'allocated_mpr':allocated_mpr})
+            .select_related('pr_master')\
+            .select_related('pr_master__cln_master')\
+            .filter(
+                pr_master__in=TblAgentAllocation
+                .objects.filter(al_agent=request.user).values('al_master'))    
+    # print(allocated_pr.values())        
 
+    return render(request, 'TM_template/Agent/agent_property.html', {'allocated_pr': allocated_pr, 'allocated_mpr': allocated_mpr})
 
 
 '''view tenant Details'''
 @for_staff
-def TenantDetails(request,tid):
-    history={}
-    tenant={}
-    count=1
+def TenantDetails(request, tid):
+    history = {}
+    tenant = {}
+    count = 1
     # try:
     tenant = TblTenant.objects.get(id=tid)
-    history = TblPropertyAllocation.objects.filter(pa_tenant=tenant).select_related('pa_property__pr_master__cln_master')
+    history = TblPropertyAllocation.objects.filter(
+        pa_tenant=tenant).select_related('pa_property__pr_master__cln_master')
     print(history.values())
     for h in history:
         if h.pa_is_allocated == True:
-            count=0
-    return render(request, 'TM_template/Agent/view_tenant_detail.html', {'tenant': tenant,'history':history,'count':count,})
+            count = 0
+    return render(request, 'TM_template/Agent/view_tenant_detail.html', {'tenant': tenant, 'history': history, 'count': count, })
     # except Exception as e:
-        # print(e)
+    # print(e)
     # return view_tenants(request)
 
 # redirect to agent home
@@ -879,29 +948,30 @@ def activation_change_tenant(request):
     tenant = TblTenant.objects.get(id=request.GET['id'])
     try:
         if 'change' in request.GET.keys():
-            print("\n\n",tenant)
+            print("\n\n", tenant)
             if request.GET['change'] == 'activate':
                 print("Activated")
                 tenant.tn_is_active = True
                 tenant.save()
             else:
                 print("Deactivated")
-                if tenant.tn_status == 2 or tenant.tn_status == 3:         
+                if tenant.tn_status == 2 or tenant.tn_status == 3:
                     pAllocation = TblPropertyAllocation.objects.get(
                         pa_tenant=tenant, pa_is_allocated=True)
                     pAllocation.pa_property.pr_is_allocated = False
                     pAllocation.pa_property.save()
-                    pAllocation.pa_is_allocated=False
-                    pAllocation.save() 
+                    pAllocation.pa_is_allocated = False
+                    pAllocation.save()
                 tenant.tn_is_active = False
                 tenant.tn_status = 0
-                tenant.save() 
-            return HttpResponse("Done") 
+                tenant.save()
+            return HttpResponse("Done")
         else:
-            return HttpResponse("Error")     
+            return HttpResponse("Error")
     except Exception as e:
         print("\n\nErorr:----------->", e)
     return HttpResponseRedirect(reverse(view_tenants))
+
 
 @for_staff
 def tenant_search_result(request):
@@ -917,72 +987,92 @@ def tenant_search_result(request):
             # print("\nTenant list:\n", tenantlist)
     except Exception as e:
         print(e)
-    return render(request, 'TM_template/Agent/tenants.html', {'tenantlist': tenantlist,'status':status})
+    return render(request, 'TM_template/Agent/tenants.html', {'tenantlist': tenantlist})
 
 
-def tenant_search(user, suggestion=None, status="all" ):
+def tenant_search(user, suggestion=None, status="all"):
     tn_list = []
     if suggestion:
         if status == 'all':
             tn_list = TblTenant.objects.filter(
                 tn_name__istartswith=suggestion, tn_agent=user)
-        if status == "active":
+        elif status == "active":
             tn_list = TblTenant.objects.filter(
                 tn_name__istartswith=suggestion, tn_agent=user, tn_is_active=True)
-        if status == "inactive":
+        elif status == "inactive":
             tn_list = TblTenant.objects.filter(
-                tn_name__istartswith=suggestion, tn_agent=user, tn_is_active=False)        
+                tn_name__istartswith=suggestion, tn_agent=user, tn_is_active=False)
         print("\n\n\n", tn_list)
     else:
         if status == 'all':
             tn_list = TblTenant.objects.filter(tn_agent=user)
-        if status == 'active':
-            tn_list = TblTenant.objects.filter(tn_agent=user,tn_is_active=True)
-        if status == 'inactive':
-            tn_list = TblTenant.objects.filter(tn_agent=user,tn_is_active=False)
+        elif status == 'active':
+            tn_list = TblTenant.objects.filter(
+                tn_agent=user, tn_is_active=True)
+        elif status == 'inactive':
+            tn_list = TblTenant.objects.filter(
+                tn_agent=user, tn_is_active=False)
         print("\n\n\n", tn_list)
     return tn_list
 
 
 def get_Tenant_list(request):
     if 'pid' in request.GET.keys():
-        # pobj=TblProperty.objects\
-        # .select_related('pr_master')\
-        # .select_related('pr_master__cln_master')\
-        # .filter(id=request.GET['pid'],
-        #     pr_master__in=TblAgentAllocation
-        #     .objects.filter(al_agent=request.user).values('al_master'))
-        pobj = allocated_property_view.objects.get(
-            property_id=request.GET['pid'])
+        pobj = TblProperty.objects\
+                .select_related('pr_master')\
+                .select_related('pr_master__cln_master')\
+                .filter(
+                    pr_master__in=TblAgentAllocation
+                    .objects.filter(al_agent=request.user)
+                            .values('al_master'),
+                    pk=request.GET['pid'])
         # print(request.GET['pid'])
-        # print(pobj.pr_address, pobj.msp_name, pobj.msp_address)
-        Tenant_list = TblTenant.objects.filter(
-            Q(tn_is_active=True) & Q(tn_agent_id=request.user) & Q(tn_status = 1) | Q(tn_status = 0 ))
+        prop=None
+        for p in pobj:
+            prop=p
+        print(pobj.values())
+        # print(pobj.pr_address, pobj.pr_master.cln_master.msp_name, pobj.pr_master.cln_master.msp_address)
+        Tenant_list = TblTenant.objects.filter(tn_is_active=True,tn_agent_id=request.user).filter( Q(tn_status=1) | Q(tn_status=0))
         # print(Tenant_list)
-        context = {'pobj': pobj,
+        context = {'pobj': prop,
                    'Tenant_list': Tenant_list, 'page': "pdetails"}
     elif 'tid' in request.GET.keys():
-        ten = TblTenant.objects.get(id=request.GET['tid'], tn_is_active=True)
-        # Add filter for already allocated properties to the tenants tooo
-        plist = allocated_property_view.objects.filter(
-            agent_id=request.user, pr_is_active=True, pr_is_allocated=False)
-        # for p in plist:
-        # print(p.msp_name)
-        context = {'ten': ten, 'plist': plist, 'page': "tdetails"}
+        ten = TblTenant.objects.get(id=request.GET['tid'],
+                                    tn_is_active=True)
+        if ten.tn_status == 2:
+            prp = TblPropertyAllocation.objects\
+                .select_related('pa_property')\
+                .get(pa_tenant=ten, pa_is_allocated=True)
+            context = {'ten': ten, 'prp': prp, 'page': "tdetails"}
+        else:
+            # Add filter for already allocated properties to the tenants.
+            plist = TblVisit.objects.select_related('vs_property')\
+                .select_related('vs_property__pr_master')\
+                .select_related('vs_property__pr_master__cln_master')\
+                .filter(
+                vs_tenant=ten,
+                vs_property__pr_is_allocated=False,
+                vs_property__pr_is_active=True,
+                vs_property__pr_master__in=TblAgentAllocation
+                            .objects.filter(al_agent=request.user)
+                            .values('al_master'),
+            )\
+                .distinct('vs_property')\
+                .order_by('vs_property')
+            # for p in plist:
+            # print(p.msp_name)
+            context = {'ten': ten, 'visitlist': plist, 'page': "tdetails"}
     else:
-        Tenant_list = TblTenant.objects.filter(
-            tn_is_active=True, tn_agent_id=request.user, tn_status=1)
-        plist = allocated_property_view.objects.filter(
-            agent_id=request.user, pr_is_active=True, pr_is_allocated=False)
-        # plist = TblAgentAllocation.objects\
-        #             .filter(al_agent=request.user)\
-        #             .select_related('al_master__cln_mster')\
-        #             .prefetch_related(
-        #                 Prefetch(
-        #                     queryset=TblProperty.objects
-        #                     .filter(pr_master=OuterRef('al_master'),
-        #                             pr_is_active=True,
-        #                             pr_is_allocated=False)))
+        Tenant_list = TblTenant.objects.filter(tn_is_active=True,tn_agent_id=request.user).filter( Q(tn_status=1) | Q(tn_status=0))
+
+        plist = TblProperty.objects\
+            .select_related('pr_master')\
+            .select_related('pr_master__cln_master')\
+            .filter(
+                pr_master__in=TblAgentAllocation.objects
+                .filter(al_agent=request.user).values('al_master'),
+                pr_is_active=True,
+                pr_is_allocated=False)
 
         context = {'Tenant_list': Tenant_list, 'plist': plist, }
     return render(request, 'TM_template/Agent/allocate_property.html', context)
@@ -1027,31 +1117,74 @@ def deallocate_property(request):
                 pa_tenant=tobj, pa_is_allocated=True)
             pAllocation.pa_property.pr_is_allocated = False
             pAllocation.pa_property.save()
-            pAllocation.pa_is_allocated=False
-            pAllocation.pa_agreement_end_date=datetime.now()
+            pAllocation.pa_is_allocated = False
+            pAllocation.pa_agreement_end_date = datetime.now()
             pAllocation.save()
             return HttpResponse("1")
         except Exception as e:
             print("Error ", e)
     if 'property' in request.GET.keys():
-        
-            pid = request.GET['property']
-            print("\n\n", pid, "\n\n")
-            pobj = TblProperty.objects.get(id=pid)
-            print(type(pobj))
-            TblProperty.objects.filter(id=pid).update(pr_is_allocated = False)
-            pAllocation = TblPropertyAllocation.objects.get(
-                pa_property=pobj, pa_is_allocated=True)
-            print(type(pAllocation))
-            print(pAllocation)
-            pAllocation.pa_tenant.tn_status=0
-            pAllocation.pa_tenant.save()
-            pAllocation.pa_is_allocated=False
-            pAllocation.pa_agreement_end_date=datetime.now()
-            pAllocation.save()
-            return HttpResponse("1")
-        
+
+        pid = request.GET['property']
+        print("\n\n", pid, "\n\n")
+        pobj = TblProperty.objects.get(id=pid)
+        print(type(pobj))
+        TblProperty.objects.filter(id=pid).update(pr_is_allocated=False)
+        pAllocation = TblPropertyAllocation.objects.get(
+            pa_property=pobj, pa_is_allocated=True)
+        print(type(pAllocation))
+        print(pAllocation)
+        pAllocation.pa_tenant.tn_status = 0
+        pAllocation.pa_tenant.save()
+        pAllocation.pa_is_allocated = False
+        pAllocation.pa_agreement_end_date = datetime.now()
+        pAllocation.save()
+        return HttpResponse("1")
+
     return HttpResponse("0")
+
+
+@for_staff
+def get_tenant_visit(request):
+    id = request.GET.get('id')
+    visits = TblVisit.objects.select_related('vs_property')\
+        .select_related('vs_property__pr_master__cln_master')\
+        .filter(vs_tenant=id,
+                vs_property__pr_is_allocated=False,
+                vs_property__pr_is_active=True,
+                vs_property__pr_master__in=TblAgentAllocation
+                .objects.filter(al_agent=request.user)
+                .values('al_master'),
+                )\
+        .distinct('vs_property')\
+        .order_by('vs_property')
+    # TblVisit.objects.select_related('vs_property')\
+    #         .select_related('vs_property__pr_master')\
+    #         .select_related('vs_property__pr_master__cln_master')\
+    #         .filter(
+    #         vs_tenant=ten,
+    #         vs_property__pr_is_allocated=False,
+    #         vs_property__pr_is_active=True,
+    #         vs_property__pr_master__in=TblAgentAllocation
+    #                     .objects.filter(al_agent=request.user)
+    #                     .values('al_master'),
+    #     )\
+    #         .distinct('vs_property')\
+    #         .order_by('vs_property')
+    if visits.first() is not None:
+        response = """<option value="" style:"width:75%;" selected="selected">
+                    Select Proerty</option>
+                    """
+        for visit in visits:
+            response += "<option  value="+str(visit.vs_property.id)\
+                + "> " + visit.vs_property.pr_address+" " \
+                + visit.vs_property.pr_master.cln_master.msp_name + " "\
+                + visit.vs_property.pr_master.cln_master.msp_address + " --|-- Rent: "+  str(visit.vs_property.pr_rent)\
+                + " </option>"
+        return HttpResponse(response)
+    else:
+        return HttpResponse(0)
+
 
 
 @for_staff
@@ -1062,11 +1195,11 @@ def add_visit(request):
             # print(request.GET['tid'])
             tenant = TblTenant.objects.get(id=request.GET['tid'])
             plist = TblProperty.objects\
-                        .select_related('pr_master')\
-                        .select_related('pr_master__cln_master')\
-                        .filter(pr_is_active=True,pr_is_allocated=False,
-                            pr_master__in=TblAgentAllocation
-                            .objects.filter(al_agent=request.user).values('al_master'))
+                .select_related('pr_master')\
+                .select_related('pr_master__cln_master')\
+                .filter(pr_is_active=True, pr_is_allocated=False,
+                        pr_master__in=TblAgentAllocation
+                        .objects.filter(al_agent=request.user).values('al_master'))
             print(plist.values('pr_address'))
             # allocated_property_view.objects.filter(
             #     agent_id=request.user, pr_is_active=True, pr_is_allocated=False)
@@ -1075,18 +1208,18 @@ def add_visit(request):
             tlist = TblTenant.objects.filter(
                 tn_is_active=True, tn_agent_id=request.user)
             plist = TblProperty.objects\
-                        .select_related('pr_master')\
-                        .select_related('pr_master__cln_master')\
-                        .filter(pr_is_active=True,pr_is_allocated=False,
-                            pr_master__in=TblAgentAllocation
-                            .objects.filter(al_agent=request.user).values('al_master'))
-            print(plist.values('pr_address'))
+                .select_related('pr_master')\
+                .select_related('pr_master__cln_master')\
+                .filter(pr_is_active=True, pr_is_allocated=False,
+                        pr_master__in=TblAgentAllocation
+                        .objects.filter(al_agent=request.user).values('al_master'))
+            # print(plist.values('pr_address'))
 
             context = {'tlist': tlist, 'plist': plist}
         return render(request, 'TM_template/Agent/add_visit.html', context)
     if request.method == 'POST':
         tenant = TblTenant.objects.get(id=request.POST['selectedtn'])
-        tenant.tn_status=1
+        tenant.tn_status = 1
         tenant.save()
         prop = TblProperty.objects.get(id=request.POST['selectedpr'])
         TblVisit.objects.create(vs_tenant=tenant, vs_property=prop,
@@ -1095,15 +1228,144 @@ def add_visit(request):
     else:
         agenthome(request)
 
-#Change Tenents Visit Status
+# Change Tenents Visit Status
 def change_status(request):
     if request.method == 'GET':
-        TblTenant.objects.filter(id=request.GET['id']).update(tn_status=request.GET['status'])     
-        return HttpResponse("1")
-    return HttpResponse("0")
-        
+        for k in request.GET.keys():
+            print(k, "  ", request.GET[k])
+
+        try:
+            tenant = TblTenant.objects.get(pk=request.GET['id'])
+            status = request.GET['status']
+            print("\n\n\n",status)
+            current_status = tenant.tn_status
+            print("\n\n Ither to aya ")
+            if status == '0':
+                if current_status == 1:
+                    tenant.tn_status = '0'
+                    tenant.save()
+                elif current_status in [2, 3]:
+                    allocation = TblPropertyAllocation.objects.get(
+                        pa_tenant=tenant,
+                        pa_is_allocated=True,
+                    )
+                    allocation.pa_property.pr_is_allocated = False
+                    allocation.pa_property.save()
+                    allocation.pa_tenant.tn_status = '0'
+                    allocation.pa_tenant.save()
+                    allocation.pa_is_allocated = False
+                    allocation.save()
+                return HttpResponse("1")
+            elif status == '2':
+                if request.GET['update'] == 'true':
+                    allocation = TblPropertyAllocation.objects.get(
+                        pa_tenant=tenant,
+                        pa_is_allocated=True,
+                    )
+                    new_allocation = allocation
+                    new_allocation.pk = None
+                    new_allocation.pa_agreement_date = None
+                    new_allocation.pa_agreement_date_end = None
+                    new_allocation.pa_acceptance_letter = None
+                    new_allocation.pa_tenancy_agreement = None
+                    new_allocation.pa_final_rent = None
+                    new_allocation.save()
+
+                    # allocation.pa_property.pr_is_allocated = False
+                    # allocation.pa_property.save()
+                    allocation.pa_tenant.tn_status = '2'
+                    allocation.pa_tenant.save()
+                    allocation.pa_is_allocated = False
+                    allocation.save()
+                else:
+                    print("\n\nIdher bhi aya")
+                    prp = TblProperty.objects\
+                        .get(pk=request.GET['property'])
+                    print(prp)
+                    allocation = TblPropertyAllocation.objects\
+                        .create(
+                            pa_property=prp,
+                            pa_tenant=tenant,
+                            pa_is_allocated=True,
+                            pa_final_rent=request.GET['rent']
+                        )
+                    allocation.save()
+                    prp.pr_is_allocated = True
+                    prp.save()
+                    tenant.tn_status = 2
+                    tenant.save()
+
+                return HttpResponse("1")
+
+        except Exception as e:
+            print('Error in updating the status of tenant.', e)
+            return HttpResponse("0")
+
+
 def getrent(request):
-    rent=TblProperty.objects.get(id=request.GET['pid'])
+    rent = TblProperty.objects.get(id=request.GET['pid'])
     print(rent.pr_rent)
     return HttpResponse(rent.pr_rent)
 
+def add_rent_collected(request):
+    if request.method == 'GET':
+        if 'pid' in request.GET.keys():
+            propertyobj=TblPropertyAllocation.objects.select_related('pa_property').select_related('pa_tenant').get(pa_property=request.GET['pid'],pa_is_allocated=True)
+            
+        elif 'tid' in request.GET.keys():
+            propertyobj=TblPropertyAllocation.objects.select_related('pa_property').select_related('pa_tenant').get(pa_tenant=request.GET['tid'],pa_is_allocated=True)
+
+        print("\n\nProperty:",propertyobj.id)    
+        rentdetails=TblRentCollection.objects.filter(rc_allocation=propertyobj)
+        # length = (len(rentdetails.values()))
+        print("\n\nRent Details:",rentdetails)
+        # diff_month=(propertyobj.pa_agreement_end_date,propertyobj.pa_agreement_date)
+        
+        i=propertyobj.pa_agreement_date
+        # print("start",i)
+        # print("end",propertyobj.pa_agreement_end_date)
+        months=[]
+        delta = timedelta(days=30)
+        while i < propertyobj.pa_agreement_end_date:
+            # print("i",i)
+            months.append(i.strftime("%B, %Y"))
+            # print(i.strftime("%B")) 
+            i+=delta
+        result=[]
+        for m in months:
+            print("\n\naya")
+            print(len(rentdetails))
+            if (len(rentdetails.values()) > 0):
+                rent=False
+                for r in rentdetails:
+                    print("\n\naya")
+                    if m == r.rc_month.strftime("%B, %Y"):
+                        rent=True
+                        break
+                if rent:
+                    result.append([m,"Paid"])
+                else:
+                    result.append([m,"Unpaid"])
+                    
+            else:
+                result.append([m,"Unpaid"])
+        print(result)        
+
+        return render(request,'TM_template/Agent/add_rent.html',{'propertyobj':propertyobj,'rentdetails':rentdetails,'months':result})
+    
+    if request.method == 'POST':
+        return HttpResponse("1")
+
+def diff_month(d1,d2):
+    r = relativedelta.relativedelta(d2, d1)
+    r.months
+    return r.months
+
+def check_allocation(request):
+    if 'pid' in request.GET.keys():
+            propertyobj=TblPropertyAllocation.objects.select_related('pa_property').select_related('pa_tenant').get(pa_property=request.GET['pid'],pa_is_allocated=True)
+            if propertyobj.pa_tenant.tn_status == 3:
+                return HttpResponse("1")
+            else:
+                return HttpResponse("0")
+            

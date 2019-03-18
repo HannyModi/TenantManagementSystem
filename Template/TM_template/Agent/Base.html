@@ -116,6 +116,7 @@
         .fixed_header tbody {
             display: block;
             max-height: 400px;
+            min-height: 200px;
             overflow-y: scroll;
             border-collapse: collapse;
 
@@ -289,7 +290,7 @@ tbody tr {
                                         <ul class="dropdown-menu">
                                                 <li><a href="">Rent <i class="icon-angle-right"></i></a>
                                                     <ul class="dropdown-menu sub-menu-level1">
-                                                            <li><a href="">Add Rent Details</a></li>
+                                                            <li><a href="{% url 'add_rent' %}">Add Rent Details</a></li>
                                                             <li><a href="">View Rent Details</a></li>
                                                         </ul>
                                                 </li>

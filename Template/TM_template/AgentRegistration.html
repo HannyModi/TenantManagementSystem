@@ -63,6 +63,12 @@ Register
           {{ag_form.ag_contact}}
           <br />
 
+          <div name="imageholder" class="row tm-image-holder">
+            <div class="col-md-12" style="text-align: center">
+              <img id="myimg" style="height: 200px;text-align: center; display:none;">
+            </div>
+          </div>
+
           {{ag_form.ag_profile_image.help_text}}
           {{ag_form.ag_profile_image}}
           <br />
@@ -77,7 +83,20 @@ Register
 
           Joining Date:
           <input type="date" name="date_joined" id="datenew" style= 'width: 728px; height: 30px; padding:4px 20px'/>
-          
+          <script>
+              var today = new Date();
+              var dd = today.getDate();
+              var mm = today.getMonth()+1; //January is 0!
+              var yyyy = today.getFullYear();
+              if(dd<10){
+                      dd='0'+dd
+                  } 
+                  if(mm<10){
+                      mm='0'+mm
+                  } 
+              maxdate = yyyy+'-'+mm+'-'+dd;
+              document.getElementById("datenew").setAttribute("max", maxdate);
+          </script>
           <br />
           <button class="btn btn-success btn-medium" id="register" type="submit" value="Submit" />Send Register
           Request</button>
@@ -91,6 +110,44 @@ Register
 {% endblock %}
 {% block js %}
 <script src="{% static 'js/datepickerjs.js' %}"></script>
+<script>
+
+function readURL(input,preview) {
+
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+
+    reader.onload = function(e) {
+      preview.attr('src', e.target.result);
+      preview.css('display','block')
+    }
+
+    reader.readAsDataURL(input.files[0]);
+  }
+  else{
+    preview.css('display','none')
+  }
+}
+
+$("#id_ag_profile_image").change(function() {
+  readURL(this,$('#myimg'));
+}); 
+
+    {% comment %} $("#id_ag_profile_image").live('change',function(){
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+    
+            reader.onload = function (e) {
+                $('#myimg').attr('src', e.target.result);
+
+            }
+    
+            reader.readAsDataURL(this.files[0]);
+        }
+
+    });  {% endcomment %}
+
+</script>
 <script>
   $("#id_password2").keyup(function () {
     var pas1, pas2;
